@@ -15,7 +15,8 @@ import {
 import { Card, Label, Badge, Progress, EmptyState, cx } from "@/components/ui";
 import { BarsChart, Donut, Sparkline } from "@/components/charts";
 import { useStore } from "@/lib/store";
-import { brl, fmtDate, fmtTime, monthKey, QUOTE_STATUS, ORDER_STATUS, num } from "@/lib/format";
+import { useNow } from "@/lib/theme";
+import { brl, fmtDate, fmtTime, monthKey, QUOTE_STATUS, ORDER_STATUS, OPEN_ORDER_STATUS, num } from "@/lib/format";
 
 const GRID = "grid grid-cols-12 gap-4 sm:gap-5";
 
@@ -40,6 +41,7 @@ function Widget({
 export default function Dashboard() {
   const { data, settingsValue } = useStore();
   const now = new Date();
+  const nowTs = useNow(30_000);
   const mk = monthKey(now);
 
   const quotes = data.quotes || [];
@@ -67,17 +69,16 @@ export default function Dashboard() {
   const goal = Number(settingsValue("goals", { monthly: 8000 }).monthly) || 8000;
   const progress = (monthIn / goal) * 100;
 
-  const activeOrders = orders.filter((o: any) =>
-    ["aberta", "agendada", "em_andamento", "aguardando_cliente"].includes(o.status),
-  );
+  const activeOrders = orders.filter((o: any) => OPEN_ORDER_STATUS.includes(o.status));
 
   const upcoming = useMemo(
     () =>
       [...events]
-        .filter((e: any) => new Date(e.startAt).getTime() > Date.now() - 3600000)
+        // nowTs = 0 antes do primeiro efeito: nesse instante ainda não há dados carregados
+        .filter((e: any) => !nowTs || new Date(e.startAt).getTime() > nowTs - 3600000)
         .sort((a: any, b: any) => +new Date(a.startAt) - +new Date(b.startAt))
         .slice(0, 4),
-    [events],
+    [events, nowTs],
   );
 
   const lowStock = stock.filter((s: any) => Number(s.quantity) <= Number(s.minQuantity));
@@ -121,9 +122,10 @@ export default function Dashboard() {
       <Widget span="col-span-12" delay={0}>
         <div className="relative overflow-hidden rounded-[26px]" style={{ border: "1px solid var(--line)" }}>
           <img
-            src="images/bench.jpg"
+            src="/images/bench.jpg"
             alt="Bancada de trabalho com ferramentas da GBR Soluções"
-            className="absolute inset-0 h-full w-full object-cover"
+            // no tema escuro a foto é atenuada para não "estourar" branco na tela preta
+            className="absolute inset-0 h-full w-full object-cover dark:opacity-[.62] dark:saturate-[.85]"
             style={{ objectPosition: "70% 50%" }}
           />
           <div
@@ -217,7 +219,7 @@ export default function Dashboard() {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {Object.entries(QUOTE_STATUS).map(([key, meta]) => (
-              <div key={key} className="rounded-2xl p-4" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
+              <div key={key} className="rounded-2xl p-4" style={{ background: "var(--inset)", border: "1px solid var(--line)" }}>
                 <Badge tone={meta.tone}>{meta.label}</Badge>
                 <p className="mt-3 text-[30px] font-semibold leading-none tnum" style={{ letterSpacing: "-0.03em" }}>
                   {byStatus[key]}
@@ -254,7 +256,7 @@ export default function Dashboard() {
                     key={o.id}
                     href="/os"
                     className="group flex items-center gap-3 rounded-2xl p-3 transition"
-                    style={{ background: "var(--bg)", border: "1px solid var(--line)" }}
+                    style={{ background: "var(--inset)", border: "1px solid var(--line)" }}
                   >
                     <span
                       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
@@ -379,7 +381,7 @@ export default function Dashboard() {
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-2xl px-3 py-2.5" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
+    <div className="rounded-2xl px-3 py-2.5" style={{ background: "var(--inset)", border: "1px solid var(--line)" }}>
       <p className="label mb-1.5 truncate">{label}</p>
       <p className="tnum truncate text-[15px] font-semibold" style={{ color: tone || "var(--text)" }}>{value}</p>
     </div>

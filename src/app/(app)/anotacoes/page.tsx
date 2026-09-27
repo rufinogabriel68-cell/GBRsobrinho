@@ -204,7 +204,7 @@ export default function AnotacoesPage() {
                   ))}
                   <input
                     className="h-7 w-32 rounded-full px-3 text-[12px] outline-none"
-                    style={{ background: "var(--bg)", border: "1px solid var(--line)" }}
+                    style={{ background: "var(--inset)", border: "1px solid var(--line)" }}
                     placeholder="+ tag"
                     onKeyDown={(e) => {
                       const v = (e.target as HTMLInputElement).value.trim();

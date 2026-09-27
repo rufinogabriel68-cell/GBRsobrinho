@@ -29,6 +29,7 @@ import {
 import { QuoteDoc, printNow } from "@/components/doc";
 import { useStore, type Row } from "@/lib/store";
 import { brl, fmtDate, mailLink, QUOTE_STATUS, waLink } from "@/lib/format";
+import { compressImage } from "@/lib/images";
 
 type Status = "aguardando" | "aprovado" | "faturado" | "recusado";
 type Filter = Status | "todos";
@@ -55,7 +56,7 @@ export default function OrcamentosPage() {
       .filter((x: any) => filter === "todos" || x.status === filter)
       .filter((x: any) => {
         if (!term) return true;
-        const c = clientOf(x.clientId);
+        const c = clients.find((cl: any) => cl.id === x.clientId);
         return (x.number + " " + (x.title || "") + " " + (c?.name || "")).toLowerCase().includes(term);
       })
       .sort((a: any, b: any) => +new Date(b.createdAt) - +new Date(a.createdAt));
@@ -66,7 +67,7 @@ export default function OrcamentosPage() {
     return `ORC-${new Date().getFullYear()}-${String(max + 1).padStart(4, "0")}`;
   };
 
-  const create = async () => {
+  const create = () => {
     const draft = {
       number: nextNumber(),
       clientId: clients[0]?.id ?? null,
@@ -84,8 +85,8 @@ export default function OrcamentosPage() {
       photos: [],
       createdAt: new Date().toISOString(),
     };
-    const row = await mutate({ table: "quotes", op: "create", data: draft });
-    setEditing({ ...(row as any), ...draft, id: (row as any)?.id });
+    // só grava quando o usuário salvar — antes, cancelar deixava orçamento vazio no banco
+    setEditing({ ...draft });
   };
 
   const recalc = (draft: any) => {
@@ -101,7 +102,11 @@ export default function OrcamentosPage() {
     if (!editing) return;
     const { subtotal, total } = recalc(editing);
     const payload = { ...editing, subtotal, total };
-    await mutate({ table: "quotes", op: "update", id: editing.id, data: payload });
+    if (editing.id) await mutate({ table: "quotes", op: "update", id: editing.id, data: payload });
+    else {
+      const row: any = await mutate({ table: "quotes", op: "create", data: payload });
+      if (row?.id != null) payload.id = row.id;
+    }
     notify(`${editing.number} salvo.`, "green");
     setEditing(null);
   };
@@ -125,15 +130,13 @@ export default function OrcamentosPage() {
     if (!files || !editing) return;
     Array.from(files)
       .slice(0, 4)
-      .forEach((f) => {
-        if (f.size > 1_600_000) {
-          notify(`${f.name} está grande demais (máx. 1,6 MB).`, "amber");
-          return;
+      .forEach(async (f) => {
+        try {
+          const dataUrl = await compressImage(f, { maxSize: 1280, quality: 0.7 });
+          setEditing((d: any) => ({ ...d, photos: [...(d.photos || []), dataUrl] }));
+        } catch {
+          notify(`${f.name} não pôde ser processada.`, "amber");
         }
-        const reader = new FileReader();
-        reader.onload = () =>
-          setEditing((d: any) => ({ ...d, photos: [...(d.photos || []), String(reader.result)] }));
-        reader.readAsDataURL(f);
       });
   };
 
@@ -334,7 +337,7 @@ export default function OrcamentosPage() {
               </Field>
             </div>
 
-            <div className="rounded-2xl p-4" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
+            <div className="rounded-2xl p-4" style={{ background: "var(--inset)", border: "1px solid var(--line)" }}>
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <Label>Total calculado</Label>

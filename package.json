@@ -1,16 +1,27 @@
 {
-  "name": "nextjs-postgresql-template",
+  "name": "gbr-sobrinho",
+  "version": "1.0.0",
   "private": true,
+  "description": "GBR Soluções — painel de gestão para prestador de serviços (orçamentos, OS, agenda, estoque, financeiro e portal do cliente).",
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint",
+    "doctor": "node scripts/doctor.mjs",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "dotenv": "17.3.1",
     "drizzle-orm": "0.45.2",
+    "firebase-admin": "^14.5.0",
     "framer-motion": "^13.4.4",
     "lucide-react": "^1.48.0",
     "next": "16.2.6",

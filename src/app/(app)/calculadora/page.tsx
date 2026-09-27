@@ -141,7 +141,7 @@ export default function CalculadoraPage() {
                           type="button"
                           onClick={() => add(s)}
                           className="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition"
-                          style={{ background: chosen ? "var(--accentSoft)" : "var(--bg)", border: "1px solid var(--line)" }}
+                          style={{ background: chosen ? "var(--accentSoft)" : "var(--inset)", border: "1px solid var(--line)" }}
                         >
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-[14px] font-medium">{s.name}</span>
@@ -187,7 +187,7 @@ export default function CalculadoraPage() {
                 <div className="px-5 py-4">
                   <div className="flex flex-col gap-2">
                     {lines.map((l) => (
-                      <div key={l.serviceId} className="flex items-center gap-2 rounded-2xl px-3 py-2" style={{ background: "var(--bg)" }}>
+                      <div key={l.serviceId} className="flex items-center gap-2 rounded-2xl px-3 py-2" style={{ background: "var(--inset)" }}>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13.5px] font-medium">{l.name}</span>
                           <span className="tnum block text-[12px]" style={{ color: "var(--text-2)" }}>

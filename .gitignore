@@ -1,0 +1,37 @@
+# dependências
+/node_modules
+/.pnp
+.pnp.*
+
+# build do Next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# ambiente (NUNCA suba as chaves do Firebase/Vercel/banco)
+.env
+.env*.local
+.env.production
+!.env.example
+
+# vercel
+.vercel
+
+# firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+serviceAccount*.json
+*-firebase-adminsdk-*.json
+
+# sistema
+.DS_Store
+*.log
+npm-debug.log*
+yarn-error.log*
+.idea
+.vscode/*
+!.vscode/extensions.json

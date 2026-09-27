@@ -416,7 +416,7 @@ export function SignaturePad({
       <canvas
         ref={canvasRef}
         className="w-full cursor-crosshair touch-none rounded-2xl"
-        style={{ height, background: "var(--bg)", border: "1px dashed var(--line-strong)" }}
+        style={{ height, background: "var(--inset)", border: "1px dashed var(--line-strong)" }}
         onPointerDown={(e) => {
           const ctx = canvasRef.current!.getContext("2d")!;
           ctx.beginPath();

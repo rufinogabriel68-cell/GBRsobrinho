@@ -38,12 +38,16 @@ export const QUOTE_STATUS: Record<string, { label: string; tone: string }> = {
 
 export const ORDER_STATUS: Record<string, { label: string; tone: string; step: number }> = {
   aberta: { label: "Aberta", tone: "grey", step: 0 },
+  aprovada: { label: "Aprovada pelo cliente", tone: "green", step: 1 },
   agendada: { label: "Agendada", tone: "blue", step: 1 },
   em_andamento: { label: "Em andamento", tone: "amber", step: 2 },
   aguardando_cliente: { label: "Aguardando cliente", tone: "purple", step: 3 },
   concluida: { label: "Concluída", tone: "green", step: 4 },
   cancelada: { label: "Cancelada", tone: "red", step: -1 },
 };
+
+/** Ordens que ainda exigem trabalho (usado no painel e no menu do portal). */
+export const OPEN_ORDER_STATUS = ["aberta", "aprovada", "agendada", "em_andamento", "aguardando_cliente"];
 
 export const waLink = (phone: string | undefined | null, message: string) => {
   const p = onlyDigits(phone || "");
@@ -54,5 +58,10 @@ export const waLink = (phone: string | undefined | null, message: string) => {
 export const mailLink = (email: string | undefined | null, subject: string, body: string) =>
   `mailto:${email || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-export const signaturePad = () =>
-  `/signature-pad`;
+/** Link absoluto do portal do cliente (usa NEXT_PUBLIC_SITE_URL quando existir). */
+export const portalLink = (token: string) => {
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    (typeof window !== "undefined" ? window.location.origin : "");
+  return `${base}/portal/${token}`;
+};

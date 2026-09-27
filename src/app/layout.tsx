@@ -1,11 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { StoreProvider } from "@/lib/store";
 import { PWA } from "@/components/pwa";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
   title: "GBR Soluções — seu sobrinho de aluguel",
@@ -13,7 +10,8 @@ export const metadata: Metadata = {
     "Painel pessoal da GBR Soluções: orçamentos, ordens de serviço, agenda, estoque, financeiro e portal do cliente.",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "GBR" },
+  // "default" mantém a barra de status legível também no tema claro.
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "GBR" },
 };
 
 export const viewport: Viewport = {
@@ -26,15 +24,20 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/**
+ * Aplica o tema antes do primeiro paint para evitar o "flash branco".
+ * Roda inline (antes da hidratação) e cai no sistema quando não há preferência salva.
+ */
 const themeInit = `(function(){try{var t=localStorage.getItem("gbr.theme")||"auto";var d=t==="dark"||(t==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.dataset.theme=d?"dark":"light";document.documentElement.style.colorScheme=d?"dark":"light";}catch(e){document.documentElement.dataset.theme="light";}})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
-      <body className={`${inter.variable} antialiased`}>
+      <body className="antialiased">
         <StoreProvider>
           {children}
           <PWA />

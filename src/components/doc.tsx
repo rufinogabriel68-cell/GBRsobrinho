@@ -57,18 +57,36 @@ function DocFrame({ children, footer }: { children: ReactNode; footer?: string }
   );
 }
 
-function Head({ doc, number, date, right, logo }: { doc: string; number: string; date: string; right?: ReactNode; logo?: string }) {
+function Head({
+  doc,
+  number,
+  date,
+  right,
+  company,
+}: {
+  doc: string;
+  number: string;
+  date: string;
+  right?: ReactNode;
+  company?: any;
+}) {
+  const line = [company?.owner ? company.owner : null, company?.phone, company?.email]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
       <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-        {logo ? (
-          <img src={logo} alt="Logo" style={{ height: 44, width: 44, objectFit: "contain", borderRadius: 10 }} />
+        {company?.logo ? (
+          <img src={company.logo} alt="Logo" style={{ height: 44, width: 44, objectFit: "contain", borderRadius: 10 }} />
         ) : (
           <Mark />
         )}
         <div>
-          <p style={{ ...h1, fontSize: 20 }}>GBR Soluções</p>
-          <p style={{ ...muted, fontSize: 11.5 }}>Seu sobrinho de aluguel · (11) 98842-3310 · contato@gbrsolucoes.com.br</p>
+          <p style={{ ...h1, fontSize: 20 }}>{company?.name || "GBR Soluções"}</p>
+          <p style={{ ...muted, fontSize: 11.5 }}>
+            {line || "Seu sobrinho de aluguel"}
+            {company?.address ? ` · ${company.address}` : ""}
+          </p>
         </div>
       </div>
       <div style={{ textAlign: "right" }}>
@@ -130,7 +148,7 @@ export function QuoteDoc({ quote, client, company, conditions, footer }: QuoteDo
   const fee = Number(quote.feePercent || 0);
   return (
     <DocFrame footer={footer}>
-      <Head doc="Orçamento" number={quote.number} date={fmtDate(quote.createdAt)} logo={company?.logo} />
+      <Head doc="Orçamento" number={quote.number} date={fmtDate(quote.createdAt)} company={company} />
       <div style={{ display: "flex", gap: 24, margin: "26px 0 6px" }}>
         <Party
           title="Cliente"
@@ -203,7 +221,7 @@ export function ReceiptDoc({ quote, client, company, footer, received }: { quote
   const value = received ?? Number(quote.total);
   return (
     <DocFrame footer={footer}>
-      <Head doc="Recibo" number={`REC-${quote.number?.split("-").pop() || "000"}`} date={fmtDate(new Date())} logo={company?.logo} />
+      <Head doc="Recibo" number={`REC-${quote.number?.split("-").pop() || "000"}`} date={fmtDate(new Date())} company={company} />
       <div style={{ margin: "34px 0" }}>
         <p style={{ ...muted, fontSize: 12.5 }}>Recebemos de</p>
         <p style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>{client?.name || "Cliente"}</p>
@@ -212,7 +230,10 @@ export function ReceiptDoc({ quote, client, company, footer, received }: { quote
         <p style={{ fontSize: 13 }}>
           Correspondente a <strong>{quote.title}</strong> — orçamento {quote.number}.
         </p>
-        <p style={{ ...muted, fontSize: 12.5, marginTop: 4 }}>Por extenso referente ao valor acima, referente a serviços prestados.</p>
+        <p style={{ ...muted, fontSize: 12.5, marginTop: 4 }}>
+          Valor referente a serviços prestados, pago conforme condições combinadas.
+          {company?.document ? ` CNPJ/CPF do prestador: ${company.document}.` : ""}
+        </p>
       </div>
       <Signature value={quote.signature} label={`${company?.owner || "GBR Soluções"} — responsável`} />
     </DocFrame>
@@ -222,7 +243,7 @@ export function ReceiptDoc({ quote, client, company, footer, received }: { quote
 export function ReportDoc({ month, rows, totals, company, footer }: { month: string; rows: any[]; totals: { in: number; out: number; goal: number }; company: any; footer: string }) {
   return (
     <DocFrame footer={footer}>
-      <Head doc="Relatório mensal" number={month} date={fmtDate(new Date())} logo={company?.logo} />
+      <Head doc="Relatório mensal" number={month} date={fmtDate(new Date())} company={company} />
       <div style={{ display: "flex", gap: 24, margin: "24px 0" }}>
         <Party title="Empresa" lines={[company?.name, company?.document, company?.address]} />
         <Party title="Responsável" lines={[company?.owner, company?.phone, company?.email]} />
@@ -273,7 +294,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 export function LaudoDoc({ data, company, footer }: { data: any; company: any; footer: string }) {
   return (
     <DocFrame footer={footer}>
-      <Head doc="Laudo técnico" number={data.number} date={fmtDate(data.date)} logo={company?.logo} />
+      <Head doc="Laudo técnico" number={data.number} date={fmtDate(data.date)} company={company} />
       <div style={{ display: "flex", gap: 24, margin: "24px 0" }}>
         <Party title="Cliente" lines={[data.client, data.address, data.phone]} />
         <Party title="Responsável técnico" lines={[company?.owner, company?.document, company?.phone]} />

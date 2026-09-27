@@ -262,7 +262,7 @@ export default function EstoquePage() {
         ) : (
           <div className="flex flex-col gap-2">
             {history.map((m: any) => (
-              <div key={m.id} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: "var(--bg)" }}>
+              <div key={m.id} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: "var(--inset)" }}>
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: m.type === "in" ? "var(--green-soft)" : "var(--amber-soft)", color: m.type === "in" ? "var(--green)" : "var(--amber)" }}>
                   {m.type === "in" ? <ArrowUpCircle size={15} /> : <ArrowDownCircle size={15} />}
                 </span>

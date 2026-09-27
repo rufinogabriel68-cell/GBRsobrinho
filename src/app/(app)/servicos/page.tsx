@@ -350,7 +350,7 @@ export default function ServicosPage() {
                 ))}
               </div>
             </Field>
-            <div className="flex items-center gap-3 rounded-2xl p-4" style={{ background: "var(--bg)" }}>
+            <div className="flex items-center gap-3 rounded-2xl p-4" style={{ background: "var(--inset)" }}>
               <Badge tone="grey">Prévia</Badge>
               <span className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: `${catDraft.color}22`, color: catDraft.color }}>
                 <Wrench size={15} />

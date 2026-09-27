@@ -104,10 +104,10 @@ export default function DocumentosPage() {
             style={{ animationDelay: "60ms" }}
           >
             <img
-              src="images/paper.jpg"
+              src="/images/paper.jpg"
               alt=""
               aria-hidden
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover dark:opacity-[.14]"
               style={{ opacity: 0.5, maskImage: "linear-gradient(to bottom, rgba(0,0,0,.9), transparent 75%)", WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,.9), transparent 75%)" }}
             />
             <div className="relative">
@@ -138,7 +138,7 @@ export default function DocumentosPage() {
                   {!quotes.length && <p className="mt-2 text-[13px]" style={{ color: "var(--text-3)" }}>Nenhum orçamento cadastrado ainda.</p>}
                 </div>
                 {quote && (
-                  <div className="rounded-2xl p-5" style={{ background: "var(--bg)" }}>
+                  <div className="rounded-2xl p-5" style={{ background: "var(--inset)" }}>
                     <p className="text-[16px] font-semibold">{quote.title || "Serviços"}</p>
                     <p className="text-[13.5px]" style={{ color: "var(--text-2)" }}>{client?.name || "Sem cliente"}</p>
                     <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-[13.5px]">
@@ -173,7 +173,7 @@ export default function DocumentosPage() {
                       onChange={(e) => setReceived(Number(e.target.value))}
                     />
                   </Field>
-                  <div className="rounded-2xl p-4" style={{ background: "var(--bg)" }}>
+                  <div className="rounded-2xl p-4" style={{ background: "var(--inset)" }}>
                     <Label>Cliente</Label>
                     <p className="mt-2 text-[14px]">{client?.name || "—"}</p>
                     <p className="text-[12.5px]" style={{ color: "var(--text-2)" }}>{client?.document || company?.document}</p>
@@ -237,7 +237,7 @@ export default function DocumentosPage() {
                   <Box label="Saídas" value={brl(totals.out)} tone="var(--red)" />
                   <Box label="Resultado" value={brl(totals.in - totals.out)} />
                 </div>
-                <div className="rounded-2xl p-4" style={{ background: "var(--bg)" }}>
+                <div className="rounded-2xl p-4" style={{ background: "var(--inset)" }}>
                   <Label className="mb-2">Movimentações incluídas</Label>
                   {monthRows.length === 0 ? (
                     <p className="text-[13.5px]" style={{ color: "var(--text-3)" }}>Nenhuma movimentação neste mês.</p>
@@ -314,7 +314,7 @@ export default function DocumentosPage() {
 
 function Box({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-2xl px-4 py-3" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
+    <div className="rounded-2xl px-4 py-3" style={{ background: "var(--inset)", border: "1px solid var(--line)" }}>
       <p className="label mb-1.5">{label}</p>
       <p className="tnum text-[17px] font-semibold" style={{ color: tone || "var(--text)" }}>{value}</p>
     </div>

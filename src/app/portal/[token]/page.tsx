@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -40,26 +40,32 @@ export default function PortalPage() {
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  const load = async () => {
-    const res = await fetch(`/api/portal/${token}`).catch(() => null);
-    if (!res) return setData({ ok: false, error: "Sem conexão. Verifique sua internet." });
-    const json = await res.json();
-    setData(json);
-    setSig(json.order?.signature ?? null);
-  };
-
-  useEffect(() => {
-    if (token) void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/portal/${token}`);
+      if (!res.ok) {
+        setData({ ok: false, error: "Link inválido ou sem conexão." });
+        return;
+      }
+      const json = (await res.json()) as Payload;
+      setData(json);
+      setSig(json.order?.signature ?? null);
+    } catch {
+      setData((current) => current ?? { ok: false, error: "Sem conexão. Verifique sua internet." });
+    }
   }, [token]);
 
+  // primeira carga e atualização automática a cada 12s (só com a aba visível)
   useEffect(() => {
-    const t = setInterval(() => {
+    const first = window.setTimeout(() => void load(), 0);
+    const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") void load();
     }, 12000);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(interval);
+    };
+  }, [load]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -195,7 +201,7 @@ export default function PortalPage() {
                   <div
                     className="rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed"
                     style={{
-                      background: m.author === "gbr" ? "var(--accent)" : "var(--bg)",
+                      background: m.author === "gbr" ? "var(--accent)" : "var(--inset)",
                       color: m.author === "gbr" ? "#fff" : "var(--text)",
                       border: m.author === "gbr" ? "none" : "1px solid var(--line)",
                       borderTopRightRadius: m.author === "gbr" ? 6 : undefined,
@@ -205,7 +211,7 @@ export default function PortalPage() {
                     {m.body}
                   </div>
                   <p className="mt-1 px-1 text-[11px]" style={{ color: "var(--text-3)" }}>
-                    {m.author === "gbr" ? "GBR Soluços" : "Você"} · {fmtDateTime(m.createdAt)}
+                    {m.author === "gbr" ? "GBR Soluções" : "Você"} · {fmtDateTime(m.createdAt)}
                   </p>
                 </div>
               ))}
@@ -299,7 +305,7 @@ export default function PortalPage() {
 
 function Info({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
-    <div className="rounded-2xl px-4 py-3" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
+    <div className="rounded-2xl px-4 py-3" style={{ background: "var(--inset)", border: "1px solid var(--line)" }}>
       <p className="label mb-1.5">{label}</p>
       <p className={strong ? "tnum text-[16px] font-semibold" : "text-[13.5px]"}>{value}</p>
     </div>

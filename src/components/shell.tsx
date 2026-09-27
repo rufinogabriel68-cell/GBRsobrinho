@@ -34,6 +34,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cx, Toasts } from "@/components/ui";
+import { useTheme } from "@/lib/theme";
 import { useStore } from "@/lib/store";
 import { brl, fmtDate, fmtDateTime } from "@/lib/format";
 
@@ -135,27 +136,16 @@ export function BrandMark({ size = 40 }: { size?: number }) {
 
 /* ----------------------------------------------------------------- topbar */
 
-function useTheme() {
-  const [theme, setTheme] = useState<"light" | "dark" | "auto">("auto");
-  useEffect(() => {
-    setTheme((localStorage.getItem("gbr.theme") as "light" | "dark" | "auto") || "auto");
-  }, []);
-  const apply = (t: "light" | "dark" | "auto") => {
-    const dark = t === "dark" || (t === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
-    document.documentElement.style.colorScheme = dark ? "dark" : "light";
-    localStorage.setItem("gbr.theme", t);
-    setTheme(t);
-  };
-  return { theme, apply };
-}
-
 function SyncPill() {
-  const { status, syncedAt, online, refresh } = useStore();
+  const { status, syncedAt, online, pendingCount, source, refresh } = useStore();
   const map = {
     loading: { text: "Sincronizando…", color: "var(--text-3)", icon: RefreshCw },
     synced: { text: syncedAt ? `Sincronizado ${new Date(syncedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Sincronizado", color: "var(--green)", icon: Cloud },
-    pending: { text: "Enviando alterações…", color: "var(--amber)", icon: RefreshCw },
+    pending: {
+      text: pendingCount > 1 ? `${pendingCount} alterações pendentes` : "Enviando alterações…",
+      color: "var(--amber)",
+      icon: RefreshCw,
+    },
     offline: { text: "Offline — dados em cache", color: "var(--amber)", icon: CloudOff },
     error: { text: "Sem conexão com o banco", color: "var(--red)", icon: CloudOff },
   } as const;
@@ -171,14 +161,27 @@ function SyncPill() {
     >
       <Icon size={13} className={status === "loading" || status === "pending" ? "pulse-dot" : ""} />
       {s.text}
+      {source === "demo" && (
+        <span
+          className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+          style={{ background: "var(--amber-soft)", color: "var(--amber)" }}
+          title="Modo demonstração: configure o Firebase para salvar seus dados."
+        >
+          demo
+        </span>
+      )}
       {!online && <span className="ml-1 rounded-full px-1.5 py-0.5 text-[10px]" style={{ background: "var(--amber-soft)" }}>sem rede</span>}
     </button>
   );
 }
 
 function TopBar({ onSearch, onMenu }: { onSearch: () => void; onMenu: () => void }) {
-  const { theme, apply } = useTheme();
-  const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Cloud;
+  const { theme, resolved, cycle } = useTheme();
+  // O ícone mostra como o painel está AGORA (o "auto" pode estar escuro).
+  const ThemeIcon = resolved === "dark" ? Moon : Sun;
+  const themeLabel = theme === "auto" ? "automático" : theme === "dark" ? "escuro" : "claro";
+  const nextLabel = theme === "dark" ? "claro" : theme === "light" ? "automático" : "escuro";
+  const SystemIcon = Cloud;
   return (
     <header
       className="glass sticky top-0 z-30 flex h-14 items-center gap-3 px-4 sm:px-7"
@@ -220,12 +223,21 @@ function TopBar({ onSearch, onMenu }: { onSearch: () => void; onMenu: () => void
         </button>
         <button
           className="btn btn-ghost h-9 w-9 rounded-full p-0"
-          onClick={() => apply(theme === "dark" ? "light" : theme === "light" ? "auto" : "dark")}
-          aria-label="Alternar tema"
-          title={`Tema: ${theme}`}
+          onClick={cycle}
+          aria-label={`Tema ${themeLabel}. Clique para usar o tema ${nextLabel}.`}
+          title={`Tema ${themeLabel} — clique para usar o tema ${nextLabel}`}
           type="button"
         >
-          <ThemeIcon size={17} />
+          <span className="relative flex items-center justify-center">
+            <ThemeIcon size={17} />
+            {theme === "auto" && (
+              <SystemIcon
+                size={9}
+                className="absolute -bottom-1 -right-1 rounded-full"
+                style={{ background: "var(--panel)" }}
+              />
+            )}
+          </span>
         </button>
       </div>
     </header>
@@ -244,7 +256,7 @@ type Cmd = {
   meta?: string;
 };
 
-function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
+function CommandPalette({ onClose }: { onClose: () => void }) {
   const { data } = useStore();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -286,12 +298,6 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
   }, [q, commands]);
 
   useEffect(() => {
-    setQ("");
-    setI(0);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowDown") {
@@ -311,14 +317,13 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, results, i, onClose, router]);
+  }, [results, i, onClose, router]);
 
   useEffect(() => {
     const el = listRef.current?.querySelector<HTMLElement>(`[data-idx="${i}"]`);
     el?.scrollIntoView({ block: "nearest" });
   }, [i]);
 
-  if (!open) return null;
   const active = results[i];
 
   return (
@@ -326,7 +331,7 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: "url(images/aurora.jpg)",
+          backgroundImage: "url(/images/aurora.jpg)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           filter: "blur(30px) saturate(130%)",
@@ -440,8 +445,6 @@ export function Shell({ children }: { children: ReactNode }) {
   const [drawer, setDrawer] = useState(false);
   const pathname = usePathname();
 
-  const { refresh } = useStore();
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -453,21 +456,7 @@ export function Shell({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // sincronização periódica — sensação de "iCloud": dados sempre frescos
   useEffect(() => {
-    const id = window.setInterval(() => {
-      if (document.visibilityState === "visible" && navigator.onLine) void refresh();
-    }, 60000);
-    const onVisible = () => document.visibilityState === "visible" && void refresh();
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      window.clearInterval(id);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [refresh]);
-
-  useEffect(() => {
-    setDrawer(false);
     window.scrollTo({ top: 0 });
   }, [pathname]);
 
@@ -528,6 +517,7 @@ export function Shell({ children }: { children: ReactNode }) {
                   <Link
                     key={href}
                     href={href}
+                    onClick={() => setDrawer(false)}
                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px]"
                     style={{ background: active ? "var(--accentSoft)" : "transparent", color: active ? "var(--accent)" : "var(--text)" }}
                   >
@@ -540,7 +530,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
       <Toasts />
     </div>
   );

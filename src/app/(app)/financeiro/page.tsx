@@ -177,11 +177,11 @@ export default function FinanceiroPage() {
             <BarsChart data={series} format={brl} />
           </div>
           <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl px-3 py-3" style={{ background: "var(--bg)" }}>
+            <div className="rounded-2xl px-3 py-3" style={{ background: "var(--inset)" }}>
               <p className="label mb-1.5">Economia sugerida</p>
               <p className="tnum text-[17px] font-semibold">{brl((monthIn - monthOut) * (Number(settings.savingsPct) / 100))}</p>
             </div>
-            <div className="rounded-2xl px-3 py-3" style={{ background: "var(--bg)" }}>
+            <div className="rounded-2xl px-3 py-3" style={{ background: "var(--inset)" }}>
               <p className="label mb-1.5">Lançamentos</p>
               <p className="tnum text-[17px] font-semibold">{monthRows.length}</p>
             </div>
