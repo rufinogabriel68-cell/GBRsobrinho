@@ -33,6 +33,14 @@ export function resetStoreCache() {
   cached = null;
 }
 
+/** Onde o app está gravando, sem revelar segredos (aparece em /api/health). */
+export function databaseLabel(): string {
+  const kind = configuredKind();
+  if (kind === "firestore") return "Firestore (Firebase)";
+  if (kind === "postgres") return "Postgres";
+  return "demonstração (memória)";
+}
+
 /**
  * Traduz o erro do driver para algo que faça sentido na tela — o detalhe
  * técnico continua nos logs (Vercel → Deployments → Functions).
@@ -41,41 +49,38 @@ export function friendlyDbError(err: unknown): string {
   // junta a cadeia de causas (o driver aninha o erro real em `cause`)
   const parts: string[] = [];
   let current: unknown = err;
-  for (let depth = 0; depth < 4 && current; depth += 1) {
-    const e = current as { message?: string; code?: string; cause?: unknown };
+  for (let depth = 0; depth < 5 && current; depth += 1) {
+    const e = current as { message?: string; code?: string; cause?: unknown; detail?: string };
     if (e.message) parts.push(e.message);
     if (e.code) parts.push(String(e.code));
+    if (e.detail) parts.push(String(e.detail));
     current = e.cause;
   }
   const raw = parts.join(" | ") || String(err);
   const kind = configuredKind();
 
-  if (/Nenhum banco configurado/.test(raw)) {
-    return "Nenhum banco configurado. Preencha as variáveis do Firebase (FIREBASE_SERVICE_ACCOUNT) ou a DATABASE_URL na Vercel.";
-  }
-
   if (kind === "firestore") {
-    if (/ENOTFOUND|getaddrinfo|EAI_AGAIN/i.test(raw)) {
-      return "Não encontrei o projeto do Firebase. Confira FIREBASE_PROJECT_ID e a internet do servidor.";
+    if (/credential|invalid_grant|UNAUTHENTICATED|PERMISSION_DENIED|private key|DECODER/i.test(raw)) {
+      return "Não consegui entrar no Firestore: a credencial foi recusada. Gere outra chave no console do Firebase (Contas de serviço → Gerar nova chave) e cole o JSON completo em FIREBASE_SERVICE_ACCOUNT.";
     }
-    if (/credential|invalid_grant|PERMISSION_DENIED|UNAUTHENTICATED|private key|DECODER/i.test(raw)) {
-      return "Credencial do Firebase inválida. Recopie o JSON da conta de serviço em FIREBASE_SERVICE_ACCOUNT (com as quebras de linha do private_key).";
+    if (/ENOTFOUND|getaddrinfo|EAI_AGAIN|ETIMEDOUT|network/i.test(raw)) {
+      return "Não consegui falar com o Firestore (sem rede ou projeto errado). Confira FIREBASE_PROJECT_ID e a sua internet.";
     }
     if (/NOT_FOUND|does not exist/i.test(raw)) {
-      return "Firestore não encontrado neste projeto. Abra o console do Firebase e crie o banco em modo produção.";
+      return "O banco Firestore ainda não foi criado nesse projeto. Abra o console do Firebase → Firestore Database → Criar banco de dados (modo produção).";
     }
-    return "Falha ao conversar com o Firestore. Veja os logs da Vercel para o detalhe técnico.";
+    return "Falha ao conversar com o Firestore. Veja os logs do deploy para o detalhe técnico.";
   }
 
   if (/ECONNREFUSED|ENOTFOUND|ETIMEDOUT|timeout|getaddrinfo/i.test(raw)) {
-    return "O Postgres não respondeu. Confira DATABASE_URL (host, porta e senha) — ou use o Firestore.";
+    return "O banco não respondeu: não consegui conectar. Confira a DATABASE_URL (host, porta e senha) — ou configure o Firebase (veja docs/1-firebase.md).";
   }
   if (/password|authentication|SASL|role .* does not exist/i.test(raw)) {
-    return "Usuário ou senha do Postgres recusados. Confira DATABASE_URL — ou use o Firestore.";
+    return "Usuário ou senha do Postgres recusados. Confira a DATABASE_URL — ou use o Firebase.";
   }
   if (/relation .* does not exist|does not exist/i.test(raw)) {
-    return "Tabelas não encontradas no Postgres. Rode `npx drizzle-kit push` — ou use o Firestore.";
+    return "As tabelas não existem nesse banco. Rode `npx drizzle-kit push` — ou use o Firebase, que não precisa disso.";
   }
-  return raw.split("\n")[0].slice(0, 200);
+  return raw.split("\n")[0].slice(0, 240);
 }
 

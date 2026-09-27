@@ -107,7 +107,7 @@ export default function DocumentosPage() {
               src="/images/paper.jpg"
               alt=""
               aria-hidden
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover dark:opacity-[.14]"
               style={{ opacity: 0.5, maskImage: "linear-gradient(to bottom, rgba(0,0,0,.9), transparent 75%)", WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,.9), transparent 75%)" }}
             />
             <div className="relative">

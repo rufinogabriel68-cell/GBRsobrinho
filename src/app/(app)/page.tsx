@@ -124,7 +124,8 @@ export default function Dashboard() {
           <img
             src="/images/bench.jpg"
             alt="Bancada de trabalho com ferramentas da GBR Soluções"
-            className="absolute inset-0 h-full w-full object-cover"
+            // no tema escuro a foto é atenuada para não "estourar" branco na tela preta
+            className="absolute inset-0 h-full w-full object-cover dark:opacity-[.62] dark:saturate-[.85]"
             style={{ objectPosition: "70% 50%" }}
           />
           <div

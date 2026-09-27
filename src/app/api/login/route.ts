@@ -41,7 +41,9 @@ export async function POST(req: Request) {
     value: await sessionToken(expected),
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // só marca "secure" quando a página é https — assim o login também funciona
+    // ao testar pelo celular na rede local (http://192.168.x.x:3000)
+    secure: base.startsWith("https://"),
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
   });
