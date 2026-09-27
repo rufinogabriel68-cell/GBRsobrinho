@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, Plus, Clock3, MapPin } from "lucide-react";
 import { AddButton, Card, EmptyState, Field, Label, Modal, PageHead, Segmented } from "@/components/ui";
 import { useStore } from "@/lib/store";
+import { useNow } from "@/lib/theme";
 import { fmtDate, fmtTime, isoDay, uid } from "@/lib/format";
 
 type View = "dia" | "semana" | "mes";
@@ -27,6 +28,7 @@ export default function AgendaPage() {
 
   const events = data.events || [];
   const clients = data.clients || [];
+  const nowTs = useNow(60_000);
 
   const shift = (dir: number) => {
     const d = new Date(cursor);
@@ -164,7 +166,7 @@ export default function AgendaPage() {
                   style={{
                     borderBottom: "1px solid var(--line)",
                     borderRight: "1px solid var(--line)",
-                    background: isToday ? "var(--accentSoft)" : isCurrent ? "transparent" : "var(--bg)",
+                    background: isToday ? "var(--accentSoft)" : isCurrent ? "transparent" : "var(--inset)",
                     opacity: isCurrent ? 1 : 0.5,
                   }}
                 >
@@ -311,8 +313,9 @@ export default function AgendaPage() {
             <div className="mt-4 flex flex-col gap-3">
               {events
                 .filter((e: any) => {
+                  if (!nowTs) return false; // ainda antes do primeiro efeito
                   const t = new Date(e.startAt).getTime();
-                  return t >= Date.now() && t <= Date.now() + 7 * 86400000;
+                  return t >= nowTs && t <= nowTs + 7 * 86400000;
                 })
                 .sort((a: any, b: any) => +new Date(a.startAt) - +new Date(b.startAt))
                 .map((e: any) => (

@@ -1,6 +1,15 @@
 "use client";
 
-/** Gráficos SVG próprios — minimalistas, sem dependência de lib de charts. */
+import { useId } from "react";
+
+/**
+ * Gráficos SVG próprios — minimalistas, sem dependência de lib de charts.
+ *
+ * Importante: as cores são passadas por `style` (CSS) e não por atributo de
+ * apresentação, porque `var(--x)` em atributos SVG não funciona em todos os
+ * navegadores (Safari, por exemplo) — era o que deixava os gráficos invisíveis
+ * no tema escuro.
+ */
 
 export function BarsChart({
   data,
@@ -59,6 +68,7 @@ export function Sparkline({
   tone?: string;
   fill?: boolean;
 }) {
+  const uid = useId();
   if (points.length < 2) return <div style={{ height }} />;
   const w = 300;
   const max = Math.max(...points);
@@ -71,17 +81,21 @@ export function Sparkline({
   });
   const d = coords.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
   const area = `${d} L${w} ${height} L0 ${height} Z`;
-  const id = `sg-${tone.replace(/[^a-z]/gi, "")}-${height}`;
+  const gid = `spark${uid.replace(/[^a-zA-Z0-9]/g, "")}`;
   return (
     <svg viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" style={{ width: "100%", height }}>
       <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={tone} stopOpacity="0.28" />
-          <stop offset="100%" stopColor={tone} stopOpacity="0" />
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" style={{ stopColor: tone, stopOpacity: 0.28 }} />
+          <stop offset="100%" style={{ stopColor: tone, stopOpacity: 0 }} />
         </linearGradient>
       </defs>
-      {fill && <path d={area} fill={`url(#${id})`} />}
-      <path d={d} fill="none" stroke={tone} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      {fill && <path d={area} style={{ fill: `url(#${gid})` }} />}
+      <path
+        d={d}
+        style={{ fill: "none", stroke: tone, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}
+        vectorEffect="non-scaling-stroke"
+      />
     </svg>
   );
 }
@@ -107,17 +121,19 @@ export function Donut({
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track} strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} style={{ fill: "none", stroke: track, strokeWidth: stroke }} />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
-          fill="none"
-          stroke={tone}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${(c * pct) / 100} ${c}`}
-          style={{ transition: "stroke-dasharray 900ms cubic-bezier(0.22,0.61,0.36,1)" }}
+          style={{
+            fill: "none",
+            stroke: tone,
+            strokeWidth: stroke,
+            strokeLinecap: "round",
+            strokeDasharray: `${(c * pct) / 100} ${c}`,
+            transition: "stroke-dasharray 900ms cubic-bezier(0.22,0.61,0.36,1)",
+          }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>

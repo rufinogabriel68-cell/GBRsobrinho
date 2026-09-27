@@ -3,9 +3,12 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
+  color-scheme: light;
   --bg: #f5f5f7;
   --panel: #ffffff;
   --panel-2: #ffffff;
+  /* superfície interna (campos, caixas dentro de cards) */
+  --inset: #f5f5f7;
   --glass: rgba(255, 255, 255, 0.72);
   --text: #1d1d1f;
   --text-2: #515154;
@@ -30,15 +33,18 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #000000;
-  --panel: #0c0c0e;
-  --panel-2: #151517;
-  --glass: rgba(28, 28, 30, 0.72);
+  --panel: #131316;
+  --panel-2: #1c1c1f;
+  /* no escuro as caixas internas precisam ser mais claras que o card */
+  --inset: #202024;
+  --glass: rgba(24, 24, 26, 0.78);
   --text: #f5f5f7;
-  --text-2: #a1a1a6;
-  --text-3: #8a8a8f;
-  --line: rgba(255, 255, 255, 0.085);
-  --line-strong: rgba(255, 255, 255, 0.16);
+  --text-2: #b0b0b6;
+  --text-3: #8e8e94;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.2);
   --accent: #0a84ff;
   --accent-soft: rgba(10, 132, 255, 0.18);
   --amber: #ff9f0a;
@@ -49,7 +55,7 @@
   --red-soft: rgba(255, 69, 58, 0.18);
   --purple: #bf5af2;
   --purple-soft: rgba(191, 90, 242, 0.18);
-  --grey-soft: rgba(120, 120, 128, 0.2);
+  --grey-soft: rgba(120, 120, 128, 0.24);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
   --shadow: 0 14px 40px -16px rgba(0, 0, 0, 0.85);
   --shadow-lg: 0 40px 90px -40px rgba(0, 0, 0, 1);
@@ -60,6 +66,7 @@
   --color-bg: var(--bg);
   --color-panel: var(--panel);
   --color-panel2: var(--panel-2);
+  --color-inset: var(--inset);
   --color-glass: var(--glass);
   --color-text: var(--text);
   --color-text2: var(--text-2);
@@ -77,8 +84,8 @@
   --color-purple: var(--purple);
   --color-purpleSoft: var(--purple-soft);
   --color-greySoft: var(--grey-soft);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
-    var(--font-inter), Inter, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+    Inter, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
 }
 
@@ -237,7 +244,7 @@ button:focus-visible {
   height: 40px;
   padding: 0 14px;
   border-radius: 14px;
-  background: var(--bg);
+  background: var(--inset);
   border: 1px solid var(--line);
   color: var(--text);
   font-size: 14.5px;
@@ -263,7 +270,7 @@ button:focus-visible {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-soft);
-  background: var(--panel);
+  background: var(--panel-2);
 }
 
 .select {
@@ -274,6 +281,21 @@ button:focus-visible {
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
   padding-right: 34px;
+}
+
+/* controles nativos seguem o tema (checkbox/radio/data) */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"],
+input[type="number"] {
+  color-scheme: inherit;
 }
 
 .seg {

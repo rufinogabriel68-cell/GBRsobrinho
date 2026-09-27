@@ -318,7 +318,7 @@ export default function OrdensPage() {
               </Field>
             </div>
 
-            <div className="rounded-2xl p-4" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
+            <div className="rounded-2xl p-4" style={{ background: "var(--inset)", border: "1px solid var(--line)" }}>
               <div className="mb-3 flex items-center justify-between">
                 <Label>Serviços vinculados</Label>
                 <span className="text-[12.5px]" style={{ color: "var(--text-2)" }}>{(draft.serviceIds || []).length} selecionado(s)</span>
@@ -351,7 +351,7 @@ export default function OrdensPage() {
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-2xl p-4" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
+              <div className="rounded-2xl p-4" style={{ background: "var(--inset)", border: "1px solid var(--line)" }}>
                 <Label className="mb-3">Custos da OS</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Valor cobrado">
@@ -375,7 +375,7 @@ export default function OrdensPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl p-4" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
+              <div className="rounded-2xl p-4" style={{ background: "var(--inset)", border: "1px solid var(--line)" }}>
                 <Label className="mb-3">Baixa de estoque automática</Label>
                 <div className="grid max-h-52 gap-2 overflow-y-auto pr-1">
                   {stock.map((it: any) => {
@@ -418,7 +418,7 @@ export default function OrdensPage() {
             <div className="rounded-2xl p-4" style={{ border: "1px dashed var(--line-strong)" }}>
               <Label>Link do portal do cliente</Label>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <code className="mono min-w-0 flex-1 truncate rounded-xl px-3 py-2 text-[12.5px]" style={{ background: "var(--bg)" }}>
+                <code className="mono min-w-0 flex-1 truncate rounded-xl px-3 py-2 text-[12.5px]" style={{ background: "var(--inset)" }}>
                   {draft.id ? link(draft) : `/portal/${draft.token} (gerado ao salvar)`}
                 </code>
                 <button className="btn" type="button" onClick={() => copy(draft)}>
@@ -450,7 +450,7 @@ export default function OrdensPage() {
         }
       >
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between rounded-2xl px-4 py-3" style={{ background: "var(--bg)" }}>
+          <div className="flex items-center justify-between rounded-2xl px-4 py-3" style={{ background: "var(--inset)" }}>
             <div className="flex items-center gap-2 text-[13.5px]">
               <Wrench size={14} style={{ color: "var(--accent)" }} />
               <span className="font-medium">{chat?.title}</span>
@@ -483,7 +483,7 @@ export default function OrdensPage() {
               <div
                 className="rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed"
                 style={{
-                  background: m.author === "gbr" ? "var(--accent)" : "var(--bg)",
+                  background: m.author === "gbr" ? "var(--accent)" : "var(--inset)",
                   color: m.author === "gbr" ? "#fff" : "var(--text)",
                   border: m.author === "gbr" ? "none" : "1px solid var(--line)",
                   borderTopRightRadius: m.author === "gbr" ? 6 : undefined,

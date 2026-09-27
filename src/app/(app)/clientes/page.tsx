@@ -197,7 +197,7 @@ export default function ClientesPage() {
             </div>
 
             {detail.notes && (
-              <div className="rounded-2xl p-4" style={{ background: "var(--bg)" }}>
+              <div className="rounded-2xl p-4" style={{ background: "var(--inset)" }}>
                 <Label className="mb-2">Observações</Label>
                 <p className="text-[14px] leading-relaxed" style={{ color: "var(--text-2)" }}>{detail.notes}</p>
               </div>
@@ -356,7 +356,7 @@ export default function ClientesPage() {
 
 function Mini({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl px-2 py-2" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
+    <div className="rounded-xl px-2 py-2" style={{ background: "var(--inset)", border: "1px solid var(--line)" }}>
       <p className="label truncate">{label}</p>
       <p className="tnum mt-1 truncate text-[13.5px] font-semibold">{value}</p>
     </div>
