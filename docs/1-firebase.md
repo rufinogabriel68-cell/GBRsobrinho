@@ -10,6 +10,29 @@ e cerca de 20 mil gravações por dia.
 
 ---
 
+## Atalho: já tenho o projeto criado
+
+Se você já criou o projeto no console, pule direto para estes 4 passos:
+
+1. **Firestore Database** → se aparecer "Criar banco de dados", crie (modo
+   produção, localização `southamerica-east1`). Se já existe, siga.
+2. Aba **Regras** → cole `allow read, write: if false;` (veja o passo 3 abaixo)
+   → **Publicar**.
+3. ⚙ **Configurações do projeto** → **Contas de serviço** → **Gerar nova chave**
+   → baixa o `.json`.
+4. Na Vercel: **Settings → Environment Variables** →
+   `FIREBASE_SERVICE_ACCOUNT` = conteúdo do `.json` · `APP_PASSWORD` = sua senha
+   → **Save** → **Deployments → Redeploy**.
+
+Depois abra `/api/health`: tem que aparecer `"database":"firestore"`.
+
+> Os nomes dos menus do console mudam de tempo em tempo (em inglês podem
+> aparecer como *Firestore Database*, *Rules*, *Service accounts*, *Generate new
+> private key*). O que importa é a ordem: criar o banco → fechar as regras →
+> baixar a chave → colar na Vercel.
+
+---
+
 ## 1. Criar o projeto
 
 1. Abra <https://console.firebase.google.com> e entre com a conta Google.
