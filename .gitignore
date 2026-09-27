@@ -1,0 +1,38 @@
+# dependências
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+build/
+dist/
+next-env.d.ts
+
+# variáveis de ambiente (NUNCA versionar chaves)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# vercel
+.vercel
+
+# tipos / cache
+*.tsbuildinfo
+
+# sistema
+.DS_Store
+*.pem
+
+# logs de debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# firebase (CLI local)
+.firebase/
+firebase-debug.log
+.runtimeconfig.json

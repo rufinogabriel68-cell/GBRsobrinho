@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// ============================================================================
+// Regras de segurança do Firestore — GBR Sobrinho
+// ----------------------------------------------------------------------------
+// Modelo simples: apenas usuários autenticados (donos da conta) leem e
+// escrevem nos dados do painel. Ninguém sem login acessa nada.
+//
+// Para publicar: `firebase deploy --only firestore:rules`
+// (ou cole o conteúdo no Console → Firestore Database → Regras)
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    // Perfil do usuário: cada um só acessa o próprio documento
+    match /users/{uid} {
+      allow read, write: if request.auth.uid == uid;
+    }
+
+    match /clients/{clientId} {
+      allow read, write: if autenticado();
+    }
+
+    match /products/{productId} {
+      allow read, write: if autenticado();
+    }
+
+    match /orders/{orderId} {
+      allow read, write: if autenticado();
+    }
+  }
+}
