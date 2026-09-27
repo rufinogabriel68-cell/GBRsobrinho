@@ -30,6 +30,15 @@
   --shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.18);
   --shadow-lg: 0 30px 70px -30px rgba(0, 0, 0, 0.32);
   --scrim: rgba(245, 245, 247, 0.72);
+
+  /* Apelidos usados nos estilos inline dos componentes (var(--accentSoft) etc.).
+     Apontam para os tokens acima, então acompanham o tema automaticamente. */
+  --accentSoft: var(--accent-soft);
+  --amberSoft: var(--amber-soft);
+  --greenSoft: var(--green-soft);
+  --redSoft: var(--red-soft);
+  --purpleSoft: var(--purple-soft);
+  --greySoft: var(--grey-soft);
 }
 
 [data-theme="dark"] {

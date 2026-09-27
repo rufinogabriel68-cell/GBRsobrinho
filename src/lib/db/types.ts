@@ -26,19 +26,34 @@ export type PortalPayload = {
   messages: Row[];
 };
 
-export type StoreKind = "postgres" | "firestore";
+export type StoreKind = "postgres" | "firestore" | "demo";
+
+/** Resultado de uma gravação: a linha principal + tabelas afetadas por efeito colateral. */
+export type MutationResult = {
+  row: Row;
+  related?: { table: TableSlug; rows: Row[] }[];
+};
 
 export interface Persistence {
   readonly kind: StoreKind;
   /** Nome amigável para a tela de Ajustes (ex.: "Firestore · gbr-solucoes"). */
   readonly label: string;
 
+  /**
+   * Impressão digital do banco (muda a cada gravação). Permite que o app
+   * pergunte "mudou algo?" gastando 1 leitura em vez de baixar tudo de novo —
+   * essencial no plano gratuito do Firestore. `null` = sempre envia tudo.
+   */
+  version(): Promise<string | null>;
+  isSeeded(): Promise<boolean>;
+  markSeeded(): Promise<void>;
+
   list(table: TableSlug): Promise<Row[]>;
   /** Todas as tabelas de uma vez (bootstrap). */
   listAll(): Promise<Record<string, Row[]>>;
   insertMany(table: TableSlug, rows: Row[]): Promise<Row[]>;
-  create(table: TableSlug, data: Row): Promise<Row>;
-  update(table: TableSlug, id: number, data: Row): Promise<Row | null>;
+  create(table: TableSlug, data: Row): Promise<MutationResult>;
+  update(table: TableSlug, id: number, data: Row): Promise<MutationResult | null>;
   remove(table: TableSlug, id: number): Promise<void>;
   upsertSetting(key: string, value: unknown): Promise<Row>;
 

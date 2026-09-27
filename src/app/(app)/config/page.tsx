@@ -22,6 +22,18 @@ import { brl, monthKey } from "@/lib/format";
 import { compressImage } from "@/lib/images";
 import { BrandMark } from "@/components/shell";
 
+/** Resposta de /api/health — usada no cartão "Conexão e segurança". */
+type Health = {
+  ok?: boolean;
+  database?: string | null;
+  label?: string;
+  auth?: boolean;
+  /** true quando o painel está sem banco configurado (dados só na memória do servidor) */
+  demo?: boolean;
+  hint?: string;
+  error?: string;
+};
+
 export default function ConfigPage() {
   const { data, settingsValue, putSettings, notify, status, refresh } = useStore();
   const [company, setCompany] = useState<any>(settingsValue("company", {}));
@@ -105,13 +117,7 @@ export default function ConfigPage() {
     notify("Backup completo baixado.", "green");
   };
 
-  const [health, setHealth] = useState<{
-    ok: boolean;
-    database?: string | null;
-    label?: string;
-    auth?: boolean;
-    error?: string;
-  } | null>(null);
+  const [health, setHealth] = useState<Health | null>(null);
   const [checking, setChecking] = useState(false);
 
   const checkHealth = useCallback(async () => {
@@ -432,8 +438,8 @@ export default function ConfigPage() {
             <span
               className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] font-medium"
               style={{
-                background: health?.ok ? "var(--greenSoft)" : "var(--amberSoft)",
-                color: health?.ok ? "var(--green)" : "var(--amber)",
+                background: health?.ok && !health?.demo ? "var(--greenSoft)" : "var(--amberSoft)",
+                color: health?.ok && !health?.demo ? "var(--green)" : "var(--amber)",
               }}
             >
               {health?.ok ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
@@ -458,6 +464,18 @@ export default function ConfigPage() {
               </a>
             )}
           </div>
+
+          {health?.demo && (
+            <div
+              className="mt-4 rounded-2xl px-4 py-3 text-[13px] leading-relaxed"
+              style={{ background: "var(--amberSoft)", color: "var(--text)" }}
+            >
+              <strong className="font-semibold">Modo demonstração.</strong> O painel está funcionando só na memória do
+              servidor — tudo o que você cadastrar some quando ele reiniciar. Para guardar de verdade, crie o projeto no
+              Firebase e preencha <code className="mono rounded-md px-1.5 py-0.5" style={{ background: "var(--panel)" }}>FIREBASE_SERVICE_ACCOUNT</code>{" "}
+              (passo a passo em <code className="mono">docs/1-firebase.md</code>).
+            </div>
+          )}
 
           <p className="mt-4 text-[12.5px] leading-relaxed" style={{ color: "var(--text-3)" }}>
             Firestore e Postgres funcionam com o mesmo app. Para ligar a proteção por senha, defina

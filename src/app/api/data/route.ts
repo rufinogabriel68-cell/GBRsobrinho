@@ -27,17 +27,17 @@ export async function POST(req: Request) {
     const store = getStore();
 
     if (body.op === "create") {
-      const row = await store.create(body.table, body.data ?? {});
-      return NextResponse.json({ ok: true, row });
+      const { row, related } = await store.create(body.table, body.data ?? {});
+      return NextResponse.json({ ok: true, row, related, version: await store.version() });
     }
 
     if (body.op === "update") {
       if (body.id == null) {
         return NextResponse.json({ ok: false, error: "ID obrigatório para atualizar" }, { status: 400 });
       }
-      const row = await store.update(body.table, Number(body.id), body.data ?? {});
-      if (!row) return NextResponse.json({ ok: false, error: "Registro não encontrado" }, { status: 404 });
-      return NextResponse.json({ ok: true, row });
+      const result = await store.update(body.table, Number(body.id), body.data ?? {});
+      if (!result) return NextResponse.json({ ok: false, error: "Registro não encontrado" }, { status: 404 });
+      return NextResponse.json({ ok: true, row: result.row, related: result.related, version: await store.version() });
     }
 
     if (body.op === "delete") {
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: false, error: "ID obrigatório para excluir" }, { status: 400 });
       }
       await store.remove(body.table, Number(body.id));
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, version: await store.version() });
     }
 
     return NextResponse.json({ ok: false, error: "Operação inválida" }, { status: 400 });

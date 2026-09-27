@@ -133,7 +133,21 @@ Abra <http://localhost:3000/api/health>. Deve aparecer:
 Se aparecer erro, a mensagem já diz o que fazer (credencial inválida, Firestore
 não criado, etc.). O detalhe técnico completo fica no terminal.
 
-## 7. Dados de exemplo
+## 7. Confirmar que está tudo certo
+
+```bash
+npm run doctor
+```
+
+Ele testa a credencial de verdade (grava e lê um documento de teste) e, se algo
+estiver errado, diz exatamente o que fazer — sem mostrar sua chave.
+
+Também vale abrir <http://localhost:3000/api/health>: com o Firebase ligado a
+resposta é `{"ok":true,"database":"firestore","label":"Firestore · <projeto>"}`.
+Enquanto aparecer `"database":"demo"`, o painel está salvando **só na memória**
+(veja o selo laranja “demo” no topo do painel).
+
+## 8. Dados de exemplo
 
 Na primeira vez que o app abre, ele cria automaticamente uma base de
 demonstração (categorias, 16 serviços, clientes, orçamentos, OS, estoque,

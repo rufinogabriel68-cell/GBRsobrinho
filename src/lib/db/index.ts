@@ -1,4 +1,5 @@
 import { createFirestoreStore, firebaseConfigured } from "./firestore";
+import { createMemoryStore } from "./memory";
 import { createPostgresStore } from "./postgres";
 import type { Persistence, StoreKind } from "./types";
 
@@ -8,9 +9,13 @@ let cached: Persistence | null = null;
 
 export function configuredKind(): StoreKind | null {
   const forced = process.env.DB_DRIVER?.toLowerCase();
-  if (forced === "firestore" || forced === "postgres") return forced as StoreKind;
+  if (forced === "firestore" || forced === "postgres" || forced === "demo" || forced === "memory") {
+    return (forced === "memory" ? "demo" : forced) as StoreKind;
+  }
   if (firebaseConfigured()) return "firestore";
   if (process.env.DATABASE_URL) return "postgres";
+  // Nada configurado: o app abre em modo demonstração (dados só na memória),
+  // para você conhecer o painel antes de criar a conta no Firebase.
   return null;
 }
 
@@ -20,11 +25,7 @@ export function getStore(): Persistence {
   const kind = configuredKind();
   if (kind === "firestore") cached = createFirestoreStore();
   else if (kind === "postgres") cached = createPostgresStore();
-  else {
-    throw new Error(
-      "Nenhum banco configurado. Defina FIREBASE_SERVICE_ACCOUNT (ou FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY) para usar o Firestore, ou DATABASE_URL para usar Postgres.",
-    );
-  }
+  else cached = createMemoryStore();
   return cached;
 }
 

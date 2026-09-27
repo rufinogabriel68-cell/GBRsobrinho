@@ -137,7 +137,7 @@ export function BrandMark({ size = 40 }: { size?: number }) {
 /* ----------------------------------------------------------------- topbar */
 
 function SyncPill() {
-  const { status, syncedAt, online, pendingCount, refresh } = useStore();
+  const { status, syncedAt, online, pendingCount, source, refresh } = useStore();
   const map = {
     loading: { text: "Sincronizando…", color: "var(--text-3)", icon: RefreshCw },
     synced: { text: syncedAt ? `Sincronizado ${new Date(syncedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Sincronizado", color: "var(--green)", icon: Cloud },
@@ -161,14 +161,27 @@ function SyncPill() {
     >
       <Icon size={13} className={status === "loading" || status === "pending" ? "pulse-dot" : ""} />
       {s.text}
+      {source === "demo" && (
+        <span
+          className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+          style={{ background: "var(--amber-soft)", color: "var(--amber)" }}
+          title="Modo demonstração: configure o Firebase para salvar seus dados."
+        >
+          demo
+        </span>
+      )}
       {!online && <span className="ml-1 rounded-full px-1.5 py-0.5 text-[10px]" style={{ background: "var(--amber-soft)" }}>sem rede</span>}
     </button>
   );
 }
 
 function TopBar({ onSearch, onMenu }: { onSearch: () => void; onMenu: () => void }) {
-  const { theme, cycle } = useTheme();
-  const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Cloud;
+  const { theme, resolved, cycle } = useTheme();
+  // O ícone mostra como o painel está AGORA (o "auto" pode estar escuro).
+  const ThemeIcon = resolved === "dark" ? Moon : Sun;
+  const themeLabel = theme === "auto" ? "automático" : theme === "dark" ? "escuro" : "claro";
+  const nextLabel = theme === "dark" ? "claro" : theme === "light" ? "automático" : "escuro";
+  const SystemIcon = Cloud;
   return (
     <header
       className="glass sticky top-0 z-30 flex h-14 items-center gap-3 px-4 sm:px-7"
@@ -211,11 +224,20 @@ function TopBar({ onSearch, onMenu }: { onSearch: () => void; onMenu: () => void
         <button
           className="btn btn-ghost h-9 w-9 rounded-full p-0"
           onClick={cycle}
-          aria-label="Alternar tema (claro → escuro → sistema)"
-          title={`Tema: ${theme === "auto" ? "sistema" : theme === "dark" ? "escuro" : "claro"}`}
+          aria-label={`Tema ${themeLabel}. Clique para usar o tema ${nextLabel}.`}
+          title={`Tema ${themeLabel} — clique para usar o tema ${nextLabel}`}
           type="button"
         >
-          <ThemeIcon size={17} />
+          <span className="relative flex items-center justify-center">
+            <ThemeIcon size={17} />
+            {theme === "auto" && (
+              <SystemIcon
+                size={9}
+                className="absolute -bottom-1 -right-1 rounded-full"
+                style={{ background: "var(--panel)" }}
+              />
+            )}
+          </span>
         </button>
       </div>
     </header>

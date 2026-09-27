@@ -9,30 +9,26 @@ export const runtime = "nodejs";
  * `/api/health` responde `{ ok: true, database: "firestore" }` quando tudo está ligado.
  */
 export async function GET() {
-  const kind = configuredKind();
   const auth = !!process.env.APP_PASSWORD;
-  if (!kind) {
-    return NextResponse.json(
-      {
-        ok: false,
-        database: null,
-        auth,
-        error:
-          "Nenhum banco configurado. Preencha as variáveis do Firebase (FIREBASE_SERVICE_ACCOUNT ou FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY) ou DATABASE_URL.",
-      },
-      { status: 500 },
-    );
-  }
-
   try {
     const store = getStore();
     await store.ping();
-    return NextResponse.json({ ok: true, database: store.kind, label: store.label, auth });
+    const demo = store.kind === "demo";
+    return NextResponse.json({
+      ok: true,
+      database: store.kind,
+      label: store.label,
+      auth,
+      demo,
+      hint: demo
+        ? "Modo demonstração: os dados ficam só na memória do servidor. Configure o Firebase (FIREBASE_SERVICE_ACCOUNT) para salvar de verdade — veja docs/1-firebase.md."
+        : undefined,
+    });
   } catch (err) {
     return NextResponse.json(
       {
         ok: false,
-        database: kind,
+        database: configuredKind(),
         auth,
         error: friendlyDbError(err),
       },

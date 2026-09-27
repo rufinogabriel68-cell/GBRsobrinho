@@ -60,7 +60,29 @@ Para cada uma: escreva o **Name**, cole o **Value** e marque os três ambientes
 4. Abra o painel: ele pede a senha (`APP_PASSWORD`) e, na primeira vez, cria os
    dados de exemplo.
 
-## 5. Domínio próprio (opcional)
+## 5. Conferir depois do deploy
+
+```bash
+npm run doctor            # roda no seu computador, com o .env.local
+```
+
+No site publicado, abra `/api/health`:
+
+- `"database":"firestore"` → 🎉 está gravando no Firebase;
+- `"database":"demo"` → a variável do Firebase **não chegou** na Vercel (nesse
+  modo os dados somem quando a função reinicia — resolva antes de usar de verdade);
+- `"auth":false` → `APP_PASSWORD` não está definida: qualquer pessoa com o
+  endereço entra no seu painel.
+
+Passo a passo do Firebase que costuma faltar: `docs/1-firebase.md`.
+
+### Deixar o painel mais rápido (opcional)
+
+Vercel → seu projeto → **Settings → Functions → Function Region** → escolha
+**São Paulo (gru1)** → **Save**. Depois faça um **Redeploy** — com o banco em
+`southamerica-east1` e a função em São Paulo, cada tela responde bem mais rápido.
+
+## 6. Domínio próprio (opcional)
 
 1. No projeto da Vercel: **Settings → Domains → Add**.
 2. Digite seu domínio (ex.: `painel.gbrsolucoes.com.br`).
@@ -69,7 +91,7 @@ Para cada uma: escreva o **Name**, cole o **Value** e marque os três ambientes
 4. Depois de apontar o domínio, atualize `NEXT_PUBLIC_SITE_URL` com ele e faça
    **Redeploy** — assim os links enviados ao cliente saem com o endereço bonito.
 
-## 6. Instalar no celular (vira “app”)
+## 7. Instalar no celular (vira “app”)
 
 - **iPhone**: abra o site no Safari → botão **Compartilhar** → **Adicionar à
   Tela de Início**.
@@ -78,13 +100,13 @@ Para cada uma: escreva o **Name**, cole o **Value** e marque os três ambientes
 Depois de instalado, abre em tela cheia, funciona offline e sincroniza quando
 a internet volta.
 
-## 7. Atualizações
+## 8. Atualizações
 
 Todo `git push` no repositório dispara um novo deploy automaticamente. Se algo
 der errado, em **Deployments** você pode voltar para uma versão anterior
 (**Promote to Production**).
 
-## 8. Problemas comuns
+## 9. Problemas comuns
 
 | Sintoma no app | Causa provável | O que fazer |
 | --- | --- | --- |
@@ -92,11 +114,12 @@ der errado, em **Deployments** você pode voltar para uma versão anterior
 | Pede senha em looping | cookie bloqueado pelo navegador | aceite cookies de primeira parte / teste sem modo anônimo agressivo |
 | Portal do cliente com “Link inválido” | token diferente do banco atual | confira se está no mesmo projeto Firebase |
 | Alterações somem | mutação falhou e ficou na fila | o selo do topo mostra “N alterações pendentes”; clique nele para reenviar |
+| Selo “demo” no topo | sem banco configurado | preencha `FIREBASE_SERVICE_ACCOUNT` e faça **Redeploy** |
 | Erro de banco nas telas | chave da conta de serviço trocada | gere nova no Firebase e atualize `FIREBASE_SERVICE_ACCOUNT` |
 
 Relatório técnico: **Vercel → seu projeto → Deployments → (o deploy) → Functions → Logs**.
 
-## 9. Sobre planos e custo
+## 10. Sobre planos e custo
 
 - **Vercel Hobby** (grátis) atende bem um usuário; as condições de uso da Vercel
   pedem plano **Pro** para projetos comerciais.
@@ -104,7 +127,7 @@ Relatório técnico: **Vercel → seu projeto → Deployments → (o deploy) →
   o uso diário. Se um dia estourar, o plano Blaze é pago por uso e continua
   barato nesse volume.
 
-## 10. Alternativa: Postgres em vez do Firestore
+## 11. Alternativa: Postgres em vez do Firestore
 
 O app também funciona com Postgres (Neon, Supabase, Railway). Nesse caso:
 

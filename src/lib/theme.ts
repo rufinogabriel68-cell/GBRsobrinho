@@ -19,8 +19,27 @@ export function applyTheme(theme: Theme) {
   const dark = resolveTheme(theme) === "dark";
   document.documentElement.dataset.theme = dark ? "dark" : "light";
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", dark ? "#000000" : "#F5F5F7");
+  applyThemeColor(dark ? "#000000" : "#F5F5F7");
+}
+
+/**
+ * A cor da barra do navegador/aparelho. O Next gera duas metas (uma para cada
+ * preferência do sistema); como o usuário pode escolher o tema manualmente,
+ * deixamos uma única meta sem `media` mandando — senão a barra fica preta num
+ * app claro (e vice-versa) quando a escolha difere do sistema.
+ */
+function applyThemeColor(color: string) {
+  const metas = Array.from(document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
+  if (!metas.length) {
+    const meta = document.createElement("meta");
+    meta.name = "theme-color";
+    meta.content = color;
+    document.head.appendChild(meta);
+    return;
+  }
+  metas[0].removeAttribute("media");
+  metas[0].setAttribute("content", color);
+  metas.slice(1).forEach((m) => m.remove());
 }
 
 /* ------------------------------- tema (leitura no "external store") */
@@ -43,6 +62,15 @@ function emitTheme() {
   listeners.forEach((l) => l());
 }
 
+function subscribeSystem(callback: () => void) {
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+const getSystemDark = () =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+
 /**
  * Tema com três estados (claro → escuro → automático), lido via
  * `useSyncExternalStore` — o valor do localStorage entra na renderização sem
@@ -50,6 +78,8 @@ function emitTheme() {
  */
 export function useTheme() {
   const theme = useSyncExternalStore<Theme>(subscribeTheme, readStoredTheme, () => "auto");
+  const systemDark = useSyncExternalStore(subscribeSystem, getSystemDark, () => false);
+  const resolved: "light" | "dark" = theme === "dark" || (theme === "auto" && systemDark) ? "dark" : "light";
 
   const apply = useCallback((next: Theme) => {
     try {
@@ -76,7 +106,7 @@ export function useTheme() {
     return () => mq.removeEventListener("change", onChange);
   }, [theme]);
 
-  return { theme, apply, cycle };
+  return { theme, resolved, apply, cycle };
 }
 
 /**

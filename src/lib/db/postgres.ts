@@ -1,7 +1,15 @@
 import { asc, eq, sql } from "drizzle-orm";
 import * as s from "@/db/schema";
 import { getDb } from "@/db";
-import { TABLE_INFO, TABLE_SLUGS, type Persistence, type PortalPayload, type Row, type TableSlug } from "./types";
+import {
+  TABLE_INFO,
+  TABLE_SLUGS,
+  type MutationResult,
+  type Persistence,
+  type PortalPayload,
+  type Row,
+  type TableSlug,
+} from "./types";
 
 const TABLES: Record<TableSlug, any> = {
   categories: s.categories,
@@ -62,6 +70,20 @@ export function createPostgresStore(): Persistence {
     kind: "postgres",
     label: `Postgres · ${process.env.DATABASE_URL?.split("@").pop()?.split("/")[0] ?? "conectado"}`,
 
+    // Postgres não precisa de versão: a leitura é barata e o app é single-user.
+    async version() {
+      return null;
+    },
+
+    async isSeeded() {
+      const rows = await db().select({ id: s.services.id }).from(s.services).limit(1);
+      return rows.length > 0;
+    },
+
+    async markSeeded() {
+      /* no Postgres a própria tabela de serviços já indica que a base foi semeada */
+    },
+
     list: listOne,
 
     async listAll() {
@@ -84,7 +106,7 @@ export function createPostgresStore(): Persistence {
           .values({ key, value: data.value as never })
           .onConflictDoUpdate({ target: s.settings.key, set: { value: data.value as never } })
           .returning();
-        return rows[0] as Row;
+        return { row: rows[0] as Row };
       }
 
       const [row] = (await insertRows(table, [data])) as Row[];
@@ -93,13 +115,15 @@ export function createPostgresStore(): Persistence {
         const delta = row.type === "in" ? Number(row.quantity) : -Number(row.quantity);
         const [item] = await db().select().from(s.stock).where(eq(s.stock.id, row.stockId));
         if (item) {
-          await db()
+          const [updated] = await db()
             .update(s.stock)
             .set({ quantity: Math.max(0, Number(item.quantity) + delta), updatedAt: new Date() })
-            .where(eq(s.stock.id, row.stockId));
+            .where(eq(s.stock.id, row.stockId))
+            .returning();
+          return { row, related: [{ table: "stock", rows: [updated as Row] }] };
         }
       }
-      return row;
+      return { row };
     },
 
     async update(table, id, data) {
@@ -110,14 +134,14 @@ export function createPostgresStore(): Persistence {
           .set({ value: (data as Row).value as never })
           .where(eq(s.settings.key, key))
           .returning();
-        return (rows[0] as Row) ?? null;
+        return rows[0] ? { row: rows[0] as Row } : null;
       }
       const rows = await db()
         .update(TABLES[table])
         .set(coerce(table, data) as never)
         .where(eq((TABLES[table] as any).id, id))
         .returning();
-      return (rows[0] as Row) ?? null;
+      return rows[0] ? { row: rows[0] as Row } : null;
     },
 
     async remove(table, id) {

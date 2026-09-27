@@ -35,7 +35,12 @@ cp .env.example .env.local      # preencha o Firebase (ou a DATABASE_URL)
 npm run dev                     # http://localhost:3000
 ```
 
-Para conferir se o banco respondeu: <http://localhost:3000/api/health>.
+Para conferir se o banco respondeu: <http://localhost:3000/api/health> — ou rode
+`npm run doctor`, que testa a credencial de verdade e explica o que falta.
+
+> **Sem configurar nada, o painel abre em modo demonstração**: você mexe em tudo,
+> mas os dados ficam só na memória (some ao reiniciar). É ótimo para conhecer o
+> sistema; para usar de verdade, configure o Firebase (leva 10 minutos).
 
 Na primeira abertura, o app cria uma **base de demonstração** (categorias,
 16 serviços, clientes, orçamentos, OS, estoque, agenda, financeiro e notas) —
@@ -60,6 +65,7 @@ Com as duas opções configuradas, o Firestore tem prioridade; use
 | `npm run typecheck` | TypeScript sem gerar arquivos |
 | `npm run lint` | ESLint (config do Next) |
 | `npm run check` | typecheck + lint |
+| `npm run doctor` | testa Node, banco, credencial do Firebase e senha do painel |
 | `npm run db:push` | cria/atualiza as tabelas no Postgres |
 
 ## Estrutura
@@ -83,7 +89,8 @@ src/
     db/                  → drivers: firestore.ts, postgres.ts, types.ts
     store.tsx            → estado offline-first + fila de sincronização
     theme.ts             → tema claro/escuro/auto + relógio do componente
-    images.ts            → redução de fotos antes de gravar
+    images.ts            → redução de fotos antes de gravar (compressão no aparelho)
+    db/                  → drivers de banco: firestore.ts, postgres.ts, memory.ts (demonstração)
     seed.ts format.ts http.ts
   db/schema.ts           → schema Drizzle (só Postgres)
   proxy.ts               → proteção por senha (opcional)
@@ -107,6 +114,7 @@ Veja o modelo completo em [`.env.example`](.env.example):
 | Variável | Obrigatória | Para que serve |
 | --- | --- | --- |
 | `FIREBASE_SERVICE_ACCOUNT` | ✅ (Firebase) | JSON da conta de serviço (ou `FIREBASE_PROJECT_ID` + `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY`) |
+| `DB_DRIVER` | opcional | força `firestore`, `postgres` ou `demo` |
 | `DATABASE_URL` | ✅ (Postgres) | string de conexão |
 | `APP_PASSWORD` | recomendada | senha única do painel |
 | `NEXT_PUBLIC_SITE_URL` | opcional | domínio usado nos links do portal |

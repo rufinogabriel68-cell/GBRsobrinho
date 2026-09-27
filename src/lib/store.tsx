@@ -16,6 +16,7 @@ export type DataMap = Record<string, Row[]>;
 
 const CACHE_KEY = "gbr.cache.v1";
 const QUEUE_KEY = "gbr.queue.v1";
+const VERSION_KEY = "gbr.version.v1";
 
 type Op = "create" | "update" | "delete";
 
@@ -61,6 +62,22 @@ function readCache(): DataMap {
   }
 }
 
+function readVersion(): string | null {
+  try {
+    return window.localStorage.getItem(VERSION_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeVersion(v: string) {
+  try {
+    window.localStorage.setItem(VERSION_KEY, v);
+  } catch {
+    /* ignora */
+  }
+}
+
 function readQueue(): Mutation[] {
   if (typeof window === "undefined") return [];
   try {
@@ -88,6 +105,17 @@ function applyLocal(prev: DataMap, m: Mutation): { next: DataMap; row: Row | nul
   if (m.op === "create") {
     row = { id: m.tempId ?? nextTempId(), ...(m.data || {}) };
     list.push(row);
+
+    // movimentação de estoque mexe na quantidade do item também na tela
+    if (m.table === "stockMoves" && row.stockId != null) {
+      const delta = row.type === "in" ? Number(row.quantity) : -Number(row.quantity);
+      const stock = (prev.stock || []).map((item) => {
+        if (Number(item.id) !== Number(row!.stockId)) return item;
+        const quantity = Math.max(0, Number(item.quantity || 0) + (Number.isFinite(delta) ? delta : 0));
+        return { ...item, quantity, updatedAt: new Date().toISOString() };
+      });
+      return { next: { ...prev, [m.table]: list, stock }, row };
+    }
   } else if (m.op === "update") {
     const idx = list.findIndex((r) => r.id === m.id);
     if (idx >= 0) {
@@ -121,6 +149,17 @@ function remapDeep(value: unknown, from: number, to: number): unknown {
   return value;
 }
 
+/** Substitui (ou insere) linhas de uma tabela pela versão vinda do servidor. */
+function upsertRows(data: DataMap, table: string, rows: Row[]): DataMap {
+  const list = [...((data[table] as Row[]) || [])];
+  for (const row of rows) {
+    const i = list.findIndex((r) => Number(r.id) === Number(row.id));
+    if (i >= 0) list[i] = row;
+    else list.push(row);
+  }
+  return { ...data, [table]: list };
+}
+
 function remapData(data: DataMap, from: number, to: number): DataMap {
   const out: DataMap = {};
   for (const [table, rows] of Object.entries(data)) {
@@ -141,6 +180,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [notifications, setNotifications] = useState<StoreValue["notifications"]>([]);
   const queueRef = useRef<Mutation[]>([]);
+  const versionRef = useRef<string | null>(null);
   const busyRef = useRef(false);
 
   /** Único ponto de escrita do estado: mantém ref (síncrono) e React em sincronia. */
@@ -194,6 +234,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (!res.ok) throw new Error(`sync failed (${res.status})`);
         const json = await res.json().catch(() => ({}));
         const row = (json?.row ?? undefined) as Row | undefined;
+        if (json?.version) versionRef.current = String(json.version);
+        for (const rel of json?.related ?? []) {
+          if (!rel?.table || !Array.isArray(rel.rows)) continue;
+          commit(upsertRows(dataRef.current, String(rel.table), rel.rows as Row[]));
+        }
         queueRef.current = queueRef.current.slice(1);
         persistQueue();
         if (m.tempId != null && row?.id != null && row.id !== m.tempId) {
@@ -208,14 +253,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       busyRef.current = false;
     }
     return results;
-  }, [persistQueue, remapTempId]);
+  }, [commit, persistQueue, remapTempId]);
 
   const refresh = useCallback(async () => {
     try {
       const before = dataRef.current.orderMessages?.length ?? 0;
-      const res = await fetch("/api/bootstrap", { cache: "no-store" });
+      const known = versionRef.current ?? readVersion();
+      const res = await fetch(`/api/bootstrap${known ? `?v=${encodeURIComponent(known)}` : ""}`, {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("bootstrap");
       const json = await res.json();
+
+      if (json.unchanged) {
+        // nada mudou no servidor: uma leitura só e pronto
+        if (json.version) {
+          versionRef.current = String(json.version);
+          writeVersion(String(json.version));
+        }
+        setSyncedAt(json.syncedAt || new Date().toISOString());
+        setStatus("synced");
+        setOnline(true);
+        await flush();
+        return;
+      }
+
       const server = (json.data || {}) as DataMap;
 
       // dados do servidor + alterações que ainda não subiram (não perder nada na tela)
@@ -238,6 +300,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
 
       commit(merged);
+      if (json.version) {
+        versionRef.current = String(json.version);
+        writeVersion(String(json.version));
+      }
       if (json.source) setSource(String(json.source));
       setSyncedAt(json.syncedAt || new Date().toISOString());
       setStatus("synced");
@@ -256,6 +322,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [commit, flush, notify]);
 
   useEffect(() => {
+    versionRef.current = readVersion();
     queueRef.current = readQueue();
     setPendingCount(queueRef.current.length);
     const cached = readCache();

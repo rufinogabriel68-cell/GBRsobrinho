@@ -50,8 +50,7 @@ async function insert(store: Persistence, table: TableSlug, rows: Row[]): Promis
 }
 
 async function runSeed(store: Persistence) {
-  const existing = await store.list("services");
-  if (existing.length > 0) return;
+  if (await store.isSeeded()) return;
 
   const cats = await insert(store, "categories", [
       { name: "Elétrica", icon: "zap", color: "#FF9F0A" },
@@ -165,4 +164,6 @@ async function runSeed(store: Persistence) {
   for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
     await store.upsertSetting(key, value);
   }
+
+  await store.markSeeded();
 }

@@ -1,6 +1,14 @@
 import { applicationDefault, cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { Timestamp, getFirestore, type Firestore } from "firebase-admin/firestore";
-import { TABLE_INFO, TABLE_SLUGS, type Persistence, type PortalPayload, type Row, type TableSlug } from "./types";
+import {
+  TABLE_INFO,
+  TABLE_SLUGS,
+  type MutationResult,
+  type Persistence,
+  type PortalPayload,
+  type Row,
+  type TableSlug,
+} from "./types";
 
 /* ------------------------------------------------------------------ conexão */
 
@@ -161,6 +169,22 @@ export function createFirestoreStore(): Persistence {
   const db = fs();
   const col = (table: TableSlug) => db.collection(table);
 
+  /**
+   * Marca que algo mudou. O app usa isso para perguntar "mudou algo?" gastando
+   * UMA leitura em vez de reler todas as coleções — o plano gratuito do
+   * Firestore cobra por documento lido, então isso faz muita diferença.
+   */
+  async function bumpVersion() {
+    try {
+      await db
+        .collection(META)
+        .doc("version")
+        .set({ v: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}` });
+    } catch (err) {
+      console.error("bumpVersion failed", err);
+    }
+  }
+
   /** Reserva N ids numéricos sequenciais (mantém compatibilidade com o app). */
   async function reserveIds(table: TableSlug, count: number): Promise<number> {
     const ref = db.collection(META).doc("counters");
@@ -195,6 +219,7 @@ export function createFirestoreStore(): Persistence {
       written.push({ ...rows[i], id });
     }
     if (pending) await batch.commit();
+    await bumpVersion();
     return written;
   }
 
@@ -233,11 +258,22 @@ export function createFirestoreStore(): Persistence {
 
     insertMany: writeDocs,
 
+    async version() {
+      const snap = await db.collection(META).doc("version").get();
+      return snap.exists ? String((snap.data() as Row)?.v ?? "0") : null;
+    },
+
+    async isSeeded() {
+      const snap = await db.collection(META).doc("seed").get();
+      return snap.exists;
+    },
+
     async create(table, data) {
       if (table === "settings") {
         const key = String(data.key);
         await col("settings").doc(key).set({ value: data.value } as never);
-        return { key, value: data.value } as Row;
+        await bumpVersion();
+        return { row: { key, value: data.value } as Row };
       }
 
       const [row] = await writeDocs(table, [data]);
@@ -247,10 +283,13 @@ export function createFirestoreStore(): Persistence {
         const item = await itemRef.get();
         if (item.exists) {
           const quantity = Number((item.data() as Row)?.quantity ?? 0);
-          await itemRef.update({ quantity: Math.max(0, quantity + delta), updatedAt: Timestamp.now() });
+          const updated = { quantity: Math.max(0, quantity + delta), updatedAt: Timestamp.now() };
+          await itemRef.update(updated);
+          const stockRow = fromFirestore(item.id, { ...(item.data() as Row), ...updated });
+          return { row, related: [{ table: "stock", rows: [stockRow] }] };
         }
       }
-      return row;
+      return { row };
     },
 
     async update(table, id, data) {
@@ -267,7 +306,9 @@ export function createFirestoreStore(): Persistence {
       const { data: docData, blobs } = splitLargeFields(table, Number(id), prepared);
       await ref.set(docData as never, { merge: false });
       for (const blob of blobs) await db.collection(BLOBS).doc(blob.path).set({ value: blob.value });
-      return resolveBlobs(fromFirestore(String(id), docData));
+      await bumpVersion();
+      const saved = await resolveBlobs(fromFirestore(String(id), docData));
+      return { row: saved };
     },
 
     async remove(table, id) {
@@ -275,10 +316,12 @@ export function createFirestoreStore(): Persistence {
       const snap = await ref.get();
       if (snap.exists) await removeBlobsData(String(id), table, snap.data() as Row | undefined);
       await ref.delete();
+      await bumpVersion();
     },
 
     async upsertSetting(key, value) {
       await col("settings").doc(key).set({ value } as never);
+      await bumpVersion();
       return { key, value } as Row;
     },
 
@@ -302,7 +345,9 @@ export function createFirestoreStore(): Persistence {
     },
 
     async addOrderMessage(orderId, body) {
-      await writeDocs("orderMessages", [{ orderId, author: "cliente", body: body.trim().slice(0, 1200), createdAt: new Date().toISOString() }]);
+      await writeDocs("orderMessages", [
+        { orderId, author: "cliente", body: body.trim().slice(0, 1200), createdAt: new Date().toISOString() },
+      ]);
     },
 
     async updateOrder(orderId, patch) {
@@ -313,6 +358,11 @@ export function createFirestoreStore(): Persistence {
       const { data, blobs } = splitLargeFields("orders", Number(orderId), prepared);
       await ref.set(data as never, { merge: false });
       for (const blob of blobs) await db.collection(BLOBS).doc(blob.path).set({ value: blob.value });
+      await bumpVersion();
+    },
+
+    async markSeeded() {
+      await db.collection(META).doc("seed").set({ at: Timestamp.now() });
     },
 
     async ping() {
