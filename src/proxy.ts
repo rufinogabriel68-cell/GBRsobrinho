@@ -45,6 +45,6 @@ export default async function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     // tudo, exceto: arquivos internos, assets, imagens, login, portal do cliente e health
-    "/((?!_next|images|login|api/login|api/logout|api/health|portal|api/portal|icon.svg|icon-maskable.svg|manifest.webmanifest|sw.js|robots.txt).*)",
+    "/((?!_next|images|login|api/login|api/logout|api/health|portal|api/portal|favicon.ico|icon-192.png|icon-512.png|icon-maskable-512.png|apple-touch-icon.png|manifest.webmanifest|sw.js|robots.txt).*)",
   ],
 };

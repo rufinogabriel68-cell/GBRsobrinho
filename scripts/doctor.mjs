@@ -29,7 +29,10 @@ for (const file of [".env.local", ".env"]) {
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
-    process.env[key] = value.replace(/\\n/g, "\n");
+    // FIREBASE_PRIVATE_KEY (forma B do guia) traz \n literal = quebra de linha;
+    // já o JSON inteiro (forma A) precisa manter os \n como estão — senão quebra.
+    if (!value.startsWith("{")) value = value.replace(/\\n/g, "\n");
+    process.env[key] = value;
   }
 }
 
@@ -133,6 +136,17 @@ async function checkFirestore() {
     return;
   }
 
+  if (account?.private_key) {
+    try {
+      const { createPrivateKey } = await import("node:crypto");
+      createPrivateKey({ key: account.private_key, format: "pem" });
+      ok("chave privada PEM válida (verificação local)");
+    } catch {
+      problem("a chave privada está corrompida", "recopie o JSON inteiro do arquivo da conta de serviço");
+      return;
+    }
+  }
+
   try {
     const { initializeApp, cert, applicationDefault, getApps } = await import("firebase-admin/app");
     const { getFirestore } = await import("firebase-admin/firestore");
@@ -145,14 +159,21 @@ async function checkFirestore() {
 
     const db = getFirestore(app);
     const ref = db.collection("_meta").doc("health");
-    await ref.set({ at: new Date().toISOString(), from: "npm run doctor" });
-    const snap = await ref.get();
-    ok(`Firestore respondeu (documento _meta/health em ${snap.data()?.at})`);
-    ok("gravação e leitura funcionando — nada a fazer aqui");
+    await Promise.race([
+      (async () => {
+        await ref.set({ at: new Date().toISOString(), from: "npm run doctor" });
+        const snap = await ref.get();
+        ok(`Firestore respondeu (documento _meta/health em ${snap.data()?.at})`);
+        ok("gravação e leitura funcionando — nada a fazer aqui");
+      })(),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("fetch failed — tempo esgotado (20s) sem resposta do Firestore")), 20000);
+      }),
+    ]);
   } catch (err) {
     const message = String(err?.message || err);
-    if (/ENOTFOUND|getaddrinfo|EAI_AGAIN|ETIMEDOUT|ECONNREFUSED|network/i.test(message)) {
-      problem(`sem conexão com o Firestore (${message.split("\n")[0]})`, "confira a internet/proxy desta máquina");
+    if (/ENOTFOUND|getaddrinfo|EAI_AGAIN|ETIMEDOUT|ECONNREFUSED|ECONNRESET|EPIPE|UNAVAILABLE|fetch failed|socket hang up|No connection|network/i.test(message)) {
+      problem(`sem conexão com o Firestore (${message.split("\n")[0]})`, "confira a internet/proxy desta máquina (em ambientes bloqueados para googleapis, teste no seu computador ou na Vercel)");
     } else if (/DECODER|private key|invalid_grant|credential|PERMISSION_DENIED|UNAUTHENTICATED/i.test(message)) {
       problem(
         "credencial recusada pelo Google",
@@ -225,3 +246,6 @@ if (problems === 0) {
   console.log("  Guia do Firebase: docs/1-firebase.md · Publicação: docs/2-vercel.md\n");
   process.exitCode = 1;
 }
+
+// Encerra mesmo com sockets gRPC/firebase ainda abertos (caso o Google não responda).
+process.exit(process.exitCode ?? 0);
