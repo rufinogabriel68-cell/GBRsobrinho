@@ -53,8 +53,11 @@ export default function ServicosPage() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [catDraft, setCatDraft] = useState<{ id?: number; name: string; color: string; icon: string } | null>(null);
 
-  const categories = data.categories || [];
-  const services = data.services || [];
+  // referências estáveis entre renders (evita recalcular os useMemo a cada render)
+  const { categories, services } = useMemo(
+    () => ({ categories: data.categories || [], services: data.services || [] }),
+    [data],
+  );
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();

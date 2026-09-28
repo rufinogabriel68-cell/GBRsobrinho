@@ -28,9 +28,15 @@ export default function ClientesPage() {
   const [selected, setSelected] = useState<number | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
 
-  const clients = data.clients || [];
-  const quotes = data.quotes || [];
-  const orders = data.orders || [];
+  // referências estáveis entre renders (evita recalcular os useMemo a cada render)
+  const { clients, quotes, orders } = useMemo(
+    () => ({
+      clients: data.clients || [],
+      quotes: data.quotes || [],
+      orders: data.orders || [],
+    }),
+    [data],
+  );
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();

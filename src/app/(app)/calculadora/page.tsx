@@ -27,9 +27,15 @@ export default function CalculadoraPage() {
   const [passFee, setPassFee] = useState(true);
   const [discount, setDiscount] = useState(0);
 
-  const services = data.services || [];
-  const categories = data.categories || [];
-  const clients = data.clients || [];
+  // referências estáveis entre renders (evita recalcular os useMemo a cada render)
+  const { services, categories, clients } = useMemo(
+    () => ({
+      services: data.services || [],
+      categories: data.categories || [],
+      clients: data.clients || [],
+    }),
+    [data],
+  );
   const [clientId, setClientId] = useState<number | "">("");
 
   const filtered = useMemo(() => {

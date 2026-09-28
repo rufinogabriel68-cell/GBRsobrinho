@@ -29,8 +29,11 @@ export default function FinanceiroPage() {
   const [draft, setDraft] = useState<any | null>(null);
   const [printing, setPrinting] = useState(false);
 
-  const finance = data.finance || [];
-  const orders = data.orders || [];
+  // referências estáveis entre renders (evita recalcular os useMemo a cada render)
+  const { finance, orders } = useMemo(
+    () => ({ finance: data.finance || [], orders: data.orders || [] }),
+    [data],
+  );
   const settings = settingsValue("goals", { monthly: 8000, savingsPct: 20 });
   const goal = Number(settings.monthly) || 8000;
 

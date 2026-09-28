@@ -26,9 +26,15 @@ export default function EstoquePage() {
   const [move, setMove] = useState<{ item: any; type: "in" | "out"; qty: number; note: string } | null>(null);
   const [historyId, setHistoryId] = useState<number | null>(null);
 
-  const stock = data.stock || [];
-  const moves = data.stockMoves || [];
-  const orders = data.orders || [];
+  // referências estáveis entre renders (evita recalcular os useMemo a cada render)
+  const { stock, moves, orders } = useMemo(
+    () => ({
+      stock: data.stock || [],
+      moves: data.stockMoves || [],
+      orders: data.orders || [],
+    }),
+    [data],
+  );
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();

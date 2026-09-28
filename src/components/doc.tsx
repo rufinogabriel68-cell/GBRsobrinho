@@ -77,6 +77,7 @@ function Head({
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
       <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
         {company?.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element -- logo em data URL dentro do documento imprimível (next/image quebraria o estilo de impressão)
           <img src={company.logo} alt="Logo" style={{ height: 44, width: 44, objectFit: "contain", borderRadius: 10 }} />
         ) : (
           <Mark />
@@ -117,6 +118,7 @@ function Signature({ value, label }: { value?: string | null; label: string }) {
     <div style={{ marginTop: 34, display: "flex", gap: 40 }}>
       <div style={{ flex: 1 }}>
         {value ? (
+          // eslint-disable-next-line @next/next/no-img-element -- assinatura em data URL dentro do documento imprimível (next/image quebraria o estilo de impressão)
           <img src={value} alt="Assinatura" style={{ maxHeight: 64, display: "block", marginBottom: 4 }} />
         ) : (
           <div style={{ height: 64 }} />
