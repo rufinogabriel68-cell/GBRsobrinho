@@ -47,7 +47,8 @@ export default function ConfigPage() {
    * hidratação os campos apareciam vazios e o primeiro "Salvar" zerava as
    * configurações já gravadas.
    */
-  const settingsRows = data.settings || [];
+  // referência estável entre renders (evita recalcular os useMemo a cada render)
+  const settingsRows = useMemo(() => data.settings || [], [data]);
   const settingsMap = useMemo(
     () => Object.fromEntries(settingsRows.map((r: any) => [r.key, r.value])),
     [settingsRows],
@@ -187,7 +188,12 @@ export default function ConfigPage() {
                 className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl"
                 style={{ background: "var(--inset)", border: "1px solid var(--line)" }}
               >
-                {company.logo ? <img src={company.logo} alt="Logo da empresa" className="h-full w-full object-cover" /> : <BrandMark size={56} />}
+                {company.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- logo enviada pelo usuário (data URL), não passa pelo otimizador do Next
+                  <img src={company.logo} alt="Logo da empresa" className="h-full w-full object-cover" />
+                ) : (
+                  <BrandMark size={56} />
+                )}
               </div>
               <label className="btn h-9 w-full px-3 text-[13px]">
                 <Upload size={14} /> Trocar logo

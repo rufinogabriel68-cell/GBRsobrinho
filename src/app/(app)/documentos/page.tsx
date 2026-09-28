@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { FileSignature, FileText, Receipt, ScrollText, FileDown } from "lucide-react";
 import { Card, Field, Label, PageHead, SignaturePad, EmptyState } from "@/components/ui";
@@ -103,13 +104,14 @@ export default function DocumentosPage() {
             className="relative mt-4 overflow-hidden p-5 rise"
             style={{ animationDelay: "60ms" }}
           >
-            <img
-              src="/images/paper.jpg"
-              alt=""
-              aria-hidden
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover dark:opacity-[.14]"
-              style={{ opacity: 0.5, maskImage: "linear-gradient(to bottom, rgba(0,0,0,.9), transparent 75%)", WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,.9), transparent 75%)" }}
-            />
+          <Image
+            src="/images/paper.jpg"
+            alt=""
+            aria-hidden
+            fill
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover dark:opacity-[.14]"
+            style={{ opacity: 0.5, maskImage: "linear-gradient(to bottom, rgba(0,0,0,.9), transparent 75%)", WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,.9), transparent 75%)" }}
+          />
             <div className="relative">
             <Label>Como funciona</Label>
             <p className="mt-2.5 text-[13.5px] leading-relaxed" style={{ color: "var(--text-2)" }}>

@@ -17,7 +17,8 @@ export default function AnotacoesPage() {
   const [newFolder, setNewFolder] = useState("");
   const [searching, setSearching] = useState(false);
 
-  const notes = data.notes || [];
+  // referência estável entre renders (evita recalcular os useMemo a cada render)
+  const notes = useMemo(() => data.notes || [], [data]);
 
   const folders = useMemo(() => [...new Set(notes.map((n: any) => n.folder || "Geral"))], [notes]);
 

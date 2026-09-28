@@ -62,11 +62,17 @@ export default function OrdensPage() {
   const [msg, setMsg] = useState("");
   const [copyId, setCopyId] = useState<number | null>(null);
 
-  const orders = data.orders || [];
-  const clients = data.clients || [];
-  const services = data.services || [];
-  const stock = data.stock || [];
-  const messages = data.orderMessages || [];
+  // referências estáveis entre renders (evita recalcular os useMemo a cada render)
+  const { orders, clients, services, stock, messages } = useMemo(
+    () => ({
+      orders: data.orders || [],
+      clients: data.clients || [],
+      services: data.services || [],
+      stock: data.stock || [],
+      messages: data.orderMessages || [],
+    }),
+    [data],
+  );
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();

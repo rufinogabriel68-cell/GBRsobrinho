@@ -43,8 +43,11 @@ export default function OrcamentosPage() {
   const [editing, setEditing] = useState<any | null>(null);
   const [printTarget, setPrintTarget] = useState<any | null>(null);
 
-  const quotes = data.quotes || [];
-  const clients = data.clients || [];
+  // referências estáveis entre renders (evita recalcular os useMemo a cada render)
+  const { quotes, clients } = useMemo(
+    () => ({ quotes: data.quotes || [], clients: data.clients || [] }),
+    [data],
+  );
   const company = settingsValue("company", {} as any);
   const pdf = settingsValue("pdf", { conditions: "", footer: "", validity: 15 });
 
@@ -390,6 +393,7 @@ export default function OrcamentosPage() {
                 <div className="grid grid-cols-3 gap-2">
                   {(editing.photos || []).map((p: string, i: number) => (
                     <div key={i} className="relative overflow-hidden rounded-xl" style={{ border: "1px solid var(--line)" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element -- foto comprimida pelo usuário (data URL), não passa pelo otimizador do Next */}
                       <img src={p} alt={`Foto ${i + 1}`} className="h-24 w-full object-cover" />
                       <button
                         type="button"

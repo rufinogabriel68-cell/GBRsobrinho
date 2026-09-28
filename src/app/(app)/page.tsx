@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
 import {
@@ -44,13 +45,19 @@ export default function Dashboard() {
   const nowTs = useNow(30_000);
   const mk = monthKey(now);
 
-  const quotes = data.quotes || [];
-  const orders = data.orders || [];
-  const clients = data.clients || [];
-  const events = data.events || [];
-  const stock = data.stock || [];
-  const finance = data.finance || [];
-  const services = data.services || [];
+  // referências estáveis entre renders (evita recalcular os useMemo a cada render)
+  const { quotes, orders, clients, events, stock, finance, services } = useMemo(
+    () => ({
+      quotes: data.quotes || [],
+      orders: data.orders || [],
+      clients: data.clients || [],
+      events: data.events || [],
+      stock: data.stock || [],
+      finance: data.finance || [],
+      services: data.services || [],
+    }),
+    [data],
+  );
 
   const byStatus = useMemo(() => {
     const base: Record<string, number> = { aguardando: 0, aprovado: 0, faturado: 0, recusado: 0 };
@@ -121,9 +128,11 @@ export default function Dashboard() {
       {/* faixa de saudação com foto */}
       <Widget span="col-span-12" delay={0}>
         <div className="relative overflow-hidden rounded-[26px]" style={{ border: "1px solid var(--line)" }}>
-          <img
+          <Image
             src="/images/bench.jpg"
             alt="Bancada de trabalho com ferramentas da GBR Soluções"
+            fill
+            priority
             // no tema escuro a foto é atenuada para não "estourar" branco na tela preta
             className="absolute inset-0 h-full w-full object-cover dark:opacity-[.62] dark:saturate-[.85]"
             style={{ objectPosition: "70% 50%" }}
