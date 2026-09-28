@@ -9,7 +9,10 @@ export const metadata: Metadata = {
   description:
     "Painel pessoal da GBR Soluções: orçamentos, ordens de serviço, agenda, estoque, financeiro e portal do cliente.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  icons: {
+    icon: ["/favicon.ico", "/icon-192.png", "/icon-512.png"],
+    apple: ["/apple-touch-icon.png"],
+  },
   // "default" mantém a barra de status legível também no tema claro.
   appleWebApp: { capable: true, statusBarStyle: "default", title: "GBR" },
 };

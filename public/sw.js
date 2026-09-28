@@ -13,8 +13,17 @@
  * Ao publicar uma versão nova, basta subir a versão do CACHE abaixo: os caches
  * antigos são apagados no activate.
  */
-const CACHE = "gbr-shell-v2";
-const PRECACHE = ["/", "/manifest.webmanifest", "/icon.svg", "/icon-maskable.svg"];
+const CACHE = "gbr-shell-v3";
+const PRECACHE = [
+  "/",
+  "/manifest.webmanifest",
+  "/favicon.ico",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-512.png",
+  "/apple-touch-icon.png",
+  "/images/logo.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

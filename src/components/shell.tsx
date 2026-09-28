@@ -109,28 +109,16 @@ function Rail({ onSearch }: { onSearch: () => void }) {
 
 export function BrandMark({ size = 40 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
-      <defs>
-        <linearGradient id="gbr-mark" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#2E9BFF" />
-          <stop offset="55%" stopColor="#0A84FF" />
-          <stop offset="100%" stopColor="#0057D8" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M32 1.5C48.9 1.5 62.5 15.1 62.5 32S48.9 62.5 32 62.5 1.5 48.9 1.5 32 15.1 1.5 32 1.5Z"
-        fill="url(#gbr-mark)"
-      />
-      <path
-        d="M47 24A16 16 0 1 0 47 40L47 33.5 38 33.5"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="6.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="47" cy="29" r="3.1" fill="#FF9F0A" />
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element -- logo estática local, sem otimização do Next
+    <img
+      src="/images/logo.png"
+      alt=""
+      aria-hidden="true"
+      width={size}
+      height={size}
+      className="shrink-0 object-contain"
+      style={{ width: size, height: size }}
+    />
   );
 }
 
